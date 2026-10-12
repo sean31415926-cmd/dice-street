@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>骰子街 線上桌（免帳號版）</title>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  --bg: #E6ECE3;
+  --bg2: #D8E1D3;
+  --panel: #FFFFFF;
+  --panel2: #F3F6F1;
+  --ink: #1C2A2C;
+  --ink2: #5B6B6D;
+  --ink3: #8A9798;
+  --line: #CBD6CA;
+  --blue: #3B7BD6; --green: #3A9A55; --red: #DB4F45; --purple: #7B55B5; --gold: #D1A11C;
+  --blue-soft: #E4EEFB; --green-soft: #E3F3E7; --red-soft: #FBE6E4; --purple-soft: #EEE7F8; --gold-soft: #FBF2D4;
+  --coin: #F6BD45; --coin-ink: #5C4100;
+  --accent: #1E6E8C; --accent-ink: #FFFFFF; --accent-soft: #DCEBF1;
+  --shadow: 0 1px 2px rgba(20,40,40,.08), 0 6px 18px rgba(20,40,40,.08);
+  --radius: 14px;
+  --font-body: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'Heiti TC', system-ui, sans-serif;
+  --font-display: 'Fredoka', 'Noto Sans TC', 'PingFang TC', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15201D; --bg2: #1C2925; --panel: #22312D; --panel2: #1B2824;
+    --ink: #E8EFEA; --ink2: #A6B6AE; --ink3: #7C8C85; --line: #3A4B45;
+    --blue-soft: #233650; --green-soft: #1F3A2A; --red-soft: #46261F; --purple-soft: #33284A; --gold-soft: #43381A;
+    --accent: #5FB0CF; --accent-ink: #0B1A20; --accent-soft: #223B45;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15201D; --bg2: #1C2925; --panel: #22312D; --panel2: #1B2824;
+  --ink: #E8EFEA; --ink2: #A6B6AE; --ink3: #7C8C85; --line: #3A4B45;
+  --blue-soft: #233650; --green-soft: #1F3A2A; --red-soft: #46261F; --purple-soft: #33284A; --gold-soft: #43381A;
+  --accent: #5FB0CF; --accent-ink: #0B1A20; --accent-soft: #223B45;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25);
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; min-height: 100%; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.55;
+  background-image: radial-gradient(circle at 1px 1px, var(--bg2) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+button { font: inherit; color: inherit; cursor: pointer; appearance: none; -webkit-appearance: none; }
+button:disabled { cursor: not-allowed; opacity: .5; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3 { margin: 0; font-weight: 700; line-height: 1.2; }
+p { margin: 0; }
+.num { font-family: var(--font-display); font-weight: 600; letter-spacing: .01em; }
+.muted { color: var(--ink2); }
+.small { font-size: 13px; }
+
+/* ---- buttons ---- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 16px; border-radius: 999px; border: 2px solid transparent;
+  background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 15px;
+  transition: transform .08s ease, filter .12s ease;
+}
+.btn:hover:not(:disabled) { filter: brightness(1.06); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn.big { padding: 14px 22px; font-size: 17px; }
+.btn.ghost { background: transparent; border-color: var(--line); color: var(--ink); }
+.btn.ghost:hover:not(:disabled) { background: var(--panel2); }
+.btn.soft { background: var(--accent-soft); color: var(--accent); }
+.btn.danger { background: var(--red-soft); color: var(--red); }
+.btn.gold { background: var(--coin); color: var(--coin-ink); }
+.btn.on { box-shadow: inset 0 0 0 2px var(--accent); }
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.input {
+  font: inherit; padding: 10px 14px; border-radius: 12px; border: 2px solid var(--line);
+  background: var(--panel); color: var(--ink); width: 100%;
+}
+.input:focus { outline: none; border-color: var(--accent); }
+label.check { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; cursor: pointer; }
+label.check input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--accent); }
+select.input { appearance: auto; }
+
+/* ---- layout ---- */
+.app { max-width: 1480px; margin: 0 auto; padding: 12px; }
+.top {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+  padding: 8px 4px 12px;
+}
+.brand { font-family: var(--font-display); font-weight: 700; font-size: 26px; display: flex; align-items: baseline; gap: 8px; }
+.brand .sub { font-family: var(--font-body); font-size: 13px; color: var(--ink2); font-weight: 500; }
+.code { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); font-size: 14px; }
+.code b { font-family: var(--font-display); font-size: 18px; letter-spacing: .12em; }
+.top .spacer { flex: 1; }
+.board {
+  display: grid; gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "turn" "market" "cities" "log";
+}
+@media (min-width: 820px) {
+  .board { grid-template-columns: 320px minmax(0, 1fr); grid-template-areas: "turn market" "cities market" "log log"; }
+}
+@media (min-width: 1180px) {
+  .board { grid-template-columns: 330px minmax(0, 1fr) 300px; grid-template-areas: "turn market log" "cities market log"; }
+}
+.panel { background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; min-width: 0; }
+.panel h2 { font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.panel h2 .tag { font-weight: 500; font-size: 12px; color: var(--ink2); }
+#turnPanel { grid-area: turn; align-self: start; position: sticky; top: calc(8px + env(safe-area-inset-top, 0px)); }
+#marketPanel { grid-area: market; }
+#citiesPanel { grid-area: cities; }
+#logPanel { grid-area: log; align-self: start; }
+@media (max-width: 819px) { #turnPanel { position: static; } }
+
+/* ---- players strip ---- */
+.players { display: flex; gap: 8px; overflow-x: auto; padding: 2px; width: 100%; scrollbar-width: thin; }
+.pchip {
+  flex: 0 0 auto; display: grid; grid-template-columns: auto; gap: 2px;
+  padding: 8px 12px; border-radius: 12px; background: var(--panel); border: 2px solid var(--line); min-width: 120px;
+}
+.pchip.active { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.pchip .pname { font-weight: 700; display: flex; gap: 6px; align-items: center; white-space: nowrap; }
+.pchip .you { font-size: 11px; padding: 1px 6px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.pchip .host { font-size: 11px; color: var(--ink2); }
+.coins { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-display); font-weight: 600; font-size: 16px; }
+.coins::before { content: ""; width: 14px; height: 14px; border-radius: 50%; background: var(--coin); box-shadow: inset 0 0 0 2px #E39E1C; }
+.lmdots { display: flex; gap: 3px; }
+.lmdots i { width: 10px; height: 10px; border-radius: 3px; background: var(--line); display: inline-block; }
+.lmdots i.on { background: var(--gold); }
+.lmdots i.turn { background: var(--accent); width: 4px; }
+
+/* ---- dice ---- */
+.dice { display: flex; gap: 12px; align-items: center; justify-content: center; margin: 8px 0 12px; min-height: 68px; }
+.die {
+  width: 64px; height: 64px; border-radius: 14px; background: #fff; border: 2px solid #D5DCD3;
+  display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); padding: 9px;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,.08), 0 3px 8px rgba(0,0,0,.12);
+}
+.die .pip { width: 11px; height: 11px; border-radius: 50%; background: #1C2A2C; place-self: center; }
+.die.blank { background: var(--panel2); border-style: dashed; }
+.die.rolling { animation: wobble .5s ease; }
+@keyframes wobble { 0% { transform: rotate(-12deg) scale(.9); } 50% { transform: rotate(10deg) scale(1.05); } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .die.rolling { animation: none; } }
+.total { text-align: center; font-family: var(--font-display); font-size: 30px; font-weight: 700; line-height: 1; }
+.total small { font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink2); display: block; margin-top: 4px; }
+.turnhead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.turnhead .who { font-weight: 700; font-size: 17px; }
+.turnhead .round { color: var(--ink2); font-size: 13px; }
+.hint { background: var(--panel2); border-radius: 10px; padding: 10px 12px; font-size: 14px; color: var(--ink2); }
+.ledger { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 8px; display: grid; gap: 4px; font-size: 13.5px; }
+.ledger .l { padding-left: 10px; border-left: 3px solid var(--line); }
+.ledger .l.red { border-color: var(--red); } .ledger .l.blue { border-color: var(--blue); }
+.ledger .l.green { border-color: var(--green); } .ledger .l.purple { border-color: var(--purple); }
+.ledger .l.buy, .ledger .l.win { border-color: var(--gold); } .ledger .l.roll { border-color: var(--ink); }
+.ledger .l.muted { color: var(--ink3); }
+
+/* ---- decisions ---- */
+.decide { display: grid; gap: 8px; margin-top: 10px; }
+.decide h3 { font-size: 15px; }
+.choice {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left;
+  padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--panel);
+}
+.choice:hover { border-color: var(--accent); }
+.choice .cn { font-weight: 700; }
+.choice .cs { font-size: 12.5px; color: var(--ink2); }
+.choice.on { border-color: var(--accent); background: var(--accent-soft); }
+
+/* ---- cards ---- */
+.cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.cgrid.compact { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 8px; }
+.card {
+  position: relative; display: grid; grid-template-columns: 36px minmax(0, 1fr);
+  border-radius: 12px; overflow: hidden; background: var(--panel); border: 2px solid var(--line);
+  text-align: left; padding: 0; min-height: 96px; width: 100%;
+}
+.card .band { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 4px; padding: 8px 0; color: #fff; }
+.card.blue .band { background: var(--blue); } .card.green .band { background: var(--green); }
+.card.red .band { background: var(--red); } .card.purple .band { background: var(--purple); }
+.card .band .n { font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.1; text-align: center; }
+.card .band .ic { font-size: 15px; filter: saturate(.9); }
+.card .body { padding: 8px 9px 8px; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.card .name { font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; gap: 6px; align-items: baseline; }
+.card .cnt { font-family: var(--font-display); font-weight: 600; font-size: 14px; color: var(--ink2); }
+.card .desc { font-size: 12px; color: var(--ink2); line-height: 1.4; }
+.card .cost { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12.5px; color: var(--ink2); }
+.card .cost .coins { font-size: 14px; }
+.card.buyable { border-color: var(--accent); cursor: pointer; box-shadow: 0 0 0 3px var(--accent-soft); }
+.card.buyable:hover { transform: translateY(-1px); }
+.card.dim { opacity: .55; }
+.card .closed { position: absolute; inset: 0; background: repeating-linear-gradient(135deg, rgba(120,120,120,.18) 0 8px, transparent 8px 16px); display: flex; align-items: flex-end; justify-content: flex-end; padding: 6px; pointer-events: none; }
+.card .closed span { background: var(--ink); color: var(--panel); font-size: 11px; padding: 2px 7px; border-radius: 999px; }
+.card .set { font-size: 10.5px; color: var(--ink3); }
+
+/* ---- landmarks ---- */
+.lmrow { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 6px 0 12px; }
+.lm {
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; align-items: center; text-align: left;
+  padding: 8px 10px; border-radius: 12px; border: 2px dashed var(--line); background: var(--panel2); width: 100%;
+}
+.lm .ln { font-weight: 700; font-size: 14px; }
+.lm .ld { grid-column: 1 / -1; font-size: 12px; color: var(--ink2); line-height: 1.4; }
+.lm.built { border-style: solid; border-color: var(--gold); background: var(--gold-soft); }
+.lm.buyable { border-style: solid; border-color: var(--accent); background: var(--panel); cursor: pointer; box-shadow: 0 0 0 3px var(--accent-soft); }
+
+/* ---- cities ---- */
+.city { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; background: var(--panel); }
+.city summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-weight: 700; }
+.city summary::-webkit-details-marker { display: none; }
+.city summary::before { content: "▸"; color: var(--ink3); transition: transform .15s; }
+.city[open] summary::before { transform: rotate(90deg); }
+.city .stat { font-weight: 500; color: var(--ink2); font-size: 13px; }
+.city .inner { margin-top: 10px; }
+
+/* ---- log ---- */
+.log { max-height: 60vh; overflow: auto; display: grid; gap: 4px; font-size: 13.5px; padding-right: 4px; }
+@media (min-width: 1180px) { .log { max-height: calc(100vh - 140px); } }
+.log .l { padding: 3px 0 3px 10px; border-left: 3px solid var(--line); }
+.log .l.red { border-color: var(--red); } .log .l.blue { border-color: var(--blue); }
+.log .l.green { border-color: var(--green); } .log .l.purple { border-color: var(--purple); }
+.log .l.buy, .log .l.win { border-color: var(--gold); } .log .l.roll { border-color: var(--ink); font-weight: 700; }
+.log .l.sys { border-color: var(--accent); } .log .l.muted { color: var(--ink3); }
+
+/* ---- home ---- */
+.home { max-width: 760px; margin: 0 auto; display: grid; gap: 14px; }
+.hero { padding: 26px 8px 6px; }
+.hero h1 { font-family: var(--font-display); font-size: clamp(38px, 8vw, 64px); font-weight: 700; letter-spacing: .02em; }
+.hero p { color: var(--ink2); font-size: 16px; margin-top: 6px; max-width: 42em; }
+.hero .dicehero { display: flex; gap: 10px; margin-bottom: 14px; }
+.hero .die { width: 48px; height: 48px; padding: 7px; border-radius: 11px; }
+.hero .die .pip { width: 8px; height: 8px; }
+.grid2 { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+.roomlist { display: grid; gap: 8px; }
+.roomrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel2); text-align: left; width: 100%; }
+.roomrow .rc { font-family: var(--font-display); font-weight: 700; font-size: 18px; letter-spacing: .1em; }
+.roomrow .rn { font-size: 13px; color: var(--ink2); }
+.status { font-size: 13px; color: var(--ink2); padding: 8px 12px; border-radius: 10px; background: var(--panel2); }
+.status.warn { background: var(--gold-soft); color: var(--coin-ink); }
+.status.bad { background: var(--red-soft); color: var(--red); }
+
+/* ---- lobby ---- */
+.lobby { max-width: 820px; margin: 0 auto; display: grid; gap: 14px; }
+.seat { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: var(--panel2); }
+.seat .no { font-family: var(--font-display); font-weight: 700; width: 24px; color: var(--ink2); }
+.seat .empty { color: var(--ink3); }
+
+/* ---- rules dialog ---- */
+dialog { border: 0; border-radius: 16px; padding: 0; max-width: min(900px, 94vw); width: 100%; background: var(--panel); color: var(--ink); box-shadow: var(--shadow); max-height: 90vh; }
+dialog::backdrop { background: rgba(10, 20, 20, .5); }
+.dlg { padding: 20px; display: grid; gap: 16px; }
+.dlg h2 { font-size: 20px; }
+.dlg h3 { font-size: 15px; margin-top: 6px; }
+.dlg ol, .dlg ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.dlg .close { position: sticky; top: 0; display: flex; justify-content: flex-end; }
+.ctable { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ctable th, .ctable td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.ctable th { color: var(--ink2); font-weight: 500; }
+.ctable .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
+.ctable .sw.blue { background: var(--blue); } .ctable .sw.green { background: var(--green); } .ctable .sw.red { background: var(--red); } .ctable .sw.purple { background: var(--purple); }
+.tablewrap { overflow-x: auto; }
+
+/* ---- toast ---- */
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--panel); padding: 10px 16px; border-radius: 999px; font-size: 14px; box-shadow: var(--shadow); z-index: 50; max-width: 92vw; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.winbox { text-align: center; padding: 12px 0; }
+.winbox .big { font-family: var(--font-display); font-size: 28px; font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="app" class="app"></div>
+<dialog id="rulesDlg"><div class="dlg" id="rulesBody"></div></dialog>
+<script>
+/* ===== 卡片資料：基本版 + 港灣擴充 + 富豪街擴充 ===== */
+const ICONS = {
+  wheat:{e:'🌾',zh:'穀物'}, cow:{e:'🐄',zh:'牛'}, gear:{e:'⚙️',zh:'齒輪'},
+  bread:{e:'🍞',zh:'麵包'}, cup:{e:'☕',zh:'杯子'}, factory:{e:'🏭',zh:'工廠'},
+  fruit:{e:'🍎',zh:'水果'}, boat:{e:'⛵',zh:'船'}, flower:{e:'🌸',zh:'花'},
+  suitcase:{e:'💼',zh:'手提箱'}, major:{e:'🏢',zh:'大型建築'}
+};
+const COLOR_ZH = {blue:'藍', green:'綠', red:'紅', purple:'紫'};
+const COLOR_WHEN = {blue:'任何人的回合', green:'自己的回合', red:'別人的回合', purple:'自己的回合'};
+const SET_ZH = {base:'基本版', harbor:'港灣擴充', mr:'富豪街擴充'};
+
+/* effect.kind:
+   blue:  bank(amt,cond?) | tuna
+   green: bank(amt) | perIcon(icon,amt) | soda | general | loan | winery | demolition | moving
+   red:   take(amt,cond?) | takeAll(cond)
+   purple: stadium | tv | business | publisher | tax | park | renovation | tech | exhibit
+   cond: 'harbor' (擁有者已建港口) | 'lt2' (擁有者地標<2) | 'lmgte2' / 'lmgte3' (擲骰玩家地標數)
+*/
+const CARDS = [
+  // ---- 基本版 ----
+  {id:'wheat',    zh:'麥田',     en:'Wheat Field',        set:'base',   color:'blue',   icon:'wheat',   cost:1, nums:[1],      effect:{kind:'bank',amt:1},            desc:'從銀行拿 1 元。'},
+  {id:'ranch',    zh:'牧場',     en:'Ranch',              set:'base',   color:'blue',   icon:'cow',     cost:1, nums:[2],      effect:{kind:'bank',amt:1},            desc:'從銀行拿 1 元。'},
+  {id:'bakery',   zh:'麵包店',   en:'Bakery',             set:'base',   color:'green',  icon:'bread',   cost:1, nums:[2,3],    effect:{kind:'bank',amt:1},            desc:'從銀行拿 1 元。'},
+  {id:'cafe',     zh:'咖啡店',   en:'Café',               set:'base',   color:'red',    icon:'cup',     cost:2, nums:[3],      effect:{kind:'take',amt:1},            desc:'向擲骰的玩家收 1 元。'},
+  {id:'conv',     zh:'便利商店', en:'Convenience Store',  set:'base',   color:'green',  icon:'bread',   cost:2, nums:[4],      effect:{kind:'bank',amt:3},            desc:'從銀行拿 3 元。'},
+  {id:'forest',   zh:'森林',     en:'Forest',             set:'base',   color:'blue',   icon:'gear',    cost:3, nums:[5],      effect:{kind:'bank',amt:1},            desc:'從銀行拿 1 元。'},
+  {id:'stadium',  zh:'體育館',   en:'Stadium',            set:'base',   color:'purple', icon:'major',   cost:6, nums:[6],      effect:{kind:'stadium'},               desc:'向每位對手各收 2 元。'},
+  {id:'tv',       zh:'電視台',   en:'TV Station',         set:'base',   color:'purple', icon:'major',   cost:7, nums:[6],      effect:{kind:'tv'},                    desc:'選一位對手，向他收 5 元。'},
+  {id:'business', zh:'商業中心', en:'Business Center',    set:'base',   color:'purple', icon:'major',   cost:8, nums:[6],      effect:{kind:'business'},              desc:'可以和一位對手交換一張非紫色建築。'},
+  {id:'cheese',   zh:'起司工廠', en:'Cheese Factory',     set:'base',   color:'green',  icon:'factory', cost:5, nums:[7],      effect:{kind:'perIcon',icon:'cow',amt:3}, desc:'你每有一張 🐄 建築，從銀行拿 3 元。'},
+  {id:'furniture',zh:'家具工廠', en:'Furniture Factory',  set:'base',   color:'green',  icon:'factory', cost:3, nums:[8],      effect:{kind:'perIcon',icon:'gear',amt:3}, desc:'你每有一張 ⚙️ 建築，從銀行拿 3 元。'},
+  {id:'mine',     zh:'礦場',     en:'Mine',               set:'base',   color:'blue',   icon:'gear',    cost:6, nums:[9],      effect:{kind:'bank',amt:5},            desc:'從銀行拿 5 元。'},
+  {id:'famrest',  zh:'家庭餐廳', en:'Family Restaurant',  set:'base',   color:'red',    icon:'cup',     cost:3, nums:[9,10],   effect:{kind:'take',amt:2},            desc:'向擲骰的玩家收 2 元。'},
+  {id:'apple',    zh:'蘋果園',   en:'Apple Orchard',      set:'base',   color:'blue',   icon:'wheat',   cost:3, nums:[10],     effect:{kind:'bank',amt:3},            desc:'從銀行拿 3 元。'},
+  {id:'market',   zh:'蔬果市場', en:"Farmers Market",     set:'base',   color:'green',  icon:'fruit',   cost:2, nums:[11,12],  effect:{kind:'perIcon',icon:'wheat',amt:2}, desc:'你每有一張 🌾 建築，從銀行拿 2 元。'},
+  // ---- 港灣擴充 ----
+  {id:'sushi',    zh:'壽司店',   en:'Sushi Bar',          set:'harbor', color:'red',    icon:'cup',     cost:2, nums:[1],      effect:{kind:'take',amt:3,cond:'harbor'}, desc:'若你已建港口，向擲骰的玩家收 3 元。'},
+  {id:'flower',   zh:'花田',     en:'Flower Garden',      set:'harbor', color:'blue',   icon:'flower',  cost:2, nums:[4],      effect:{kind:'bank',amt:1},            desc:'從銀行拿 1 元。'},
+  {id:'flowershop',zh:'花店',    en:'Flower Shop',        set:'harbor', color:'green',  icon:'bread',   cost:1, nums:[6],      effect:{kind:'perIcon',icon:'flower',amt:1}, desc:'你每有一張 🌸 花田，從銀行拿 1 元。'},
+  {id:'pizza',    zh:'披薩店',   en:'Pizza Joint',        set:'harbor', color:'red',    icon:'cup',     cost:1, nums:[7],      effect:{kind:'take',amt:1},            desc:'向擲骰的玩家收 1 元。'},
+  {id:'mackerel', zh:'鯖魚船',   en:'Mackerel Boat',      set:'harbor', color:'blue',   icon:'boat',    cost:2, nums:[8],      effect:{kind:'bank',amt:3,cond:'harbor'}, desc:'若你已建港口，從銀行拿 3 元。'},
+  {id:'burger',   zh:'漢堡店',   en:'Hamburger Stand',    set:'harbor', color:'red',    icon:'cup',     cost:1, nums:[8],      effect:{kind:'take',amt:1},            desc:'向擲骰的玩家收 1 元。'},
+  {id:'warehouse',zh:'食品倉庫', en:'Food Warehouse',     set:'harbor', color:'green',  icon:'factory', cost:2, nums:[12,13],  effect:{kind:'perIcon',icon:'cup',amt:2}, desc:'你每有一張 ☕ 建築，從銀行拿 2 元。'},
+  {id:'tuna',     zh:'鮪魚船',   en:'Tuna Boat',          set:'harbor', color:'blue',   icon:'boat',    cost:5, nums:[12,13,14], effect:{kind:'tuna'},                desc:'若你已建港口：擲骰玩家再擲 2 顆骰，你的每艘鮪魚船都拿到該點數的錢（全部鮪魚船共用同一次擲骰）。'},
+  {id:'publisher',zh:'出版社',   en:'Publisher',          set:'harbor', color:'purple', icon:'major',   cost:5, nums:[7],      effect:{kind:'publisher'},             desc:'每位對手每有一張 ☕ 或 🍞 建築，付你 1 元。'},
+  {id:'tax',      zh:'稅務局',   en:'Tax Office',         set:'harbor', color:'purple', icon:'major',   cost:4, nums:[8,9],    effect:{kind:'tax'},                   desc:'每位擁有 10 元以上的對手，付你一半的錢（無條件捨去）。'},
+  // ---- 富豪街擴充 ----
+  {id:'general',  zh:'雜貨店',   en:'General Store',      set:'mr',     color:'green',  icon:'bread',   cost:0, nums:[2],      effect:{kind:'general'},               desc:'若你已建的地標少於 2 座，從銀行拿 2 元。'},
+  {id:'corn',     zh:'玉米田',   en:'Corn Field',         set:'mr',     color:'blue',   icon:'wheat',   cost:2, nums:[3,4],    effect:{kind:'bank',amt:1,cond:'lt2'}, desc:'若你已建的地標少於 2 座，從銀行拿 1 元。'},
+  {id:'demolition',zh:'拆除公司',en:'Demolition Company', set:'mr',     color:'green',  icon:'suitcase',cost:2, nums:[4],      effect:{kind:'demolition'},            desc:'若可能，必須拆除你的一座已建地標（翻回未建）；拆除後從銀行拿 8 元。'},
+  {id:'loan',     zh:'貸款公司', en:'Loan Office',        set:'mr',     color:'green',  icon:'suitcase',cost:0, nums:[5,6],    effect:{kind:'loan'},                  desc:'建造時先從銀行拿 5 元；之後每次發動要付銀行 2 元。'},
+  {id:'french',   zh:'法式餐廳', en:'French Restaurant',  set:'mr',     color:'red',    icon:'cup',     cost:3, nums:[5],      effect:{kind:'take',amt:5,cond:'lmgte2'}, desc:'若擲骰的玩家已建 2 座以上地標，向他收 5 元。'},
+  {id:'vineyard', zh:'葡萄園',   en:'Vineyard',           set:'mr',     color:'blue',   icon:'wheat',   cost:3, nums:[7],      effect:{kind:'bank',amt:3},            desc:'從銀行拿 3 元。'},
+  {id:'winery',   zh:'釀酒廠',   en:'Winery',             set:'mr',     color:'green',  icon:'factory', cost:3, nums:[9],      effect:{kind:'winery'},                desc:'你每有一座葡萄園，從銀行拿 6 元；然後這張釀酒廠關閉整修。'},
+  {id:'moving',   zh:'搬家公司', en:'Moving Company',     set:'mr',     color:'green',  icon:'suitcase',cost:2, nums:[9,10],   effect:{kind:'moving'},                desc:'必須把你的一張非紫色建築送給另一位玩家；送出後從銀行拿 4 元。'},
+  {id:'soda',     zh:'汽水工廠', en:'Soda Bottling Plant',set:'mr',     color:'green',  icon:'factory', cost:5, nums:[11],     effect:{kind:'soda'},                  desc:'全部玩家（含你）每有一張 ☕ 建築，你從銀行拿 1 元。'},
+  {id:'club',     zh:'會員俱樂部',en:'Private Club',      set:'mr',     color:'red',    icon:'cup',     cost:4, nums:[12,13,14], effect:{kind:'takeAll',cond:'lmgte3'}, desc:'若擲骰的玩家已建 3 座以上地標，拿走他所有的錢。'},
+  {id:'park',     zh:'公園',     en:'Park',               set:'mr',     color:'purple', icon:'major',   cost:3, nums:[11,12,13], effect:{kind:'park'},                 desc:'把所有玩家的錢集中後平均分配（除不盡時由銀行補足）。'},
+  {id:'renovation',zh:'裝修公司',en:'Renovation Company', set:'mr',     color:'purple', icon:'major',   cost:4, nums:[8],      effect:{kind:'renovation'},            desc:'選一種非紫色建築：所有玩家的該建築全部關閉整修；每位對手每有一張該建築，付你 1 元。'},
+  {id:'tech',     zh:'科技新創', en:'Tech Startup',       set:'mr',     color:'purple', icon:'major',   cost:1, nums:[10],     effect:{kind:'tech'},                  desc:'每回合結束前可投資 1 元到這張卡；發動時每位對手付你等於投資總額的錢。'},
+  {id:'exhibit',  zh:'展覽館',   en:'Exhibit Hall',       set:'mr',     color:'purple', icon:'major',   cost:7, nums:[10],     effect:{kind:'exhibit'},               desc:'可以改為發動你的一張非紫色建築（藍或綠）；若這麼做，展覽館退回供應區。'},
+];
+const CARD_BY_ID = Object.fromEntries(CARDS.map(c => [c.id, c]));
+
+const LANDMARKS = [
+  {key:'station', zh:'火車站', en:'Train Station',  set:'base',   cost:4,  desc:'你可以選擇擲 1 顆或 2 顆骰子。'},
+  {key:'mall',    zh:'購物中心', en:'Shopping Mall', set:'base',   cost:10, desc:'你的 ☕ 和 🍞 建築每次發動時多拿 1 元。'},
+  {key:'amuse',   zh:'遊樂園', en:'Amusement Park', set:'base',   cost:16, desc:'擲出兩顆相同點數時，這回合結束後再多玩一回合。'},
+  {key:'tower',   zh:'廣播塔', en:'Radio Tower',    set:'base',   cost:22, desc:'每回合可以重擲一次骰子。'},
+  {key:'harbor',  zh:'港口',   en:'Harbor',         set:'harbor', cost:2,  desc:'擲骰總和 10 以上時，可以把總和 +2。'},
+  {key:'airport', zh:'機場',   en:'Airport',        set:'harbor', cost:30, desc:'這回合沒有建造任何東西時，從銀行拿 10 元。'},
+];
+const LM_BY_KEY = Object.fromEntries(LANDMARKS.map(l => [l.key, l]));
+const CITY_HALL = {zh:'市政廳', en:'City Hall', desc:'港灣擴充的起始卡，一開始就已建好，不算地標。結算收入後若你剛好 0 元，從銀行拿 1 元。'};
+
+const RULES_TEXT = {
+  flow: [
+    '輪到你時：① 擲骰（有火車站可選 1 或 2 顆）→ ② 依骰子總和結算所有人的收入 → ③ 建造：買一張建築或蓋一座地標（只能買一樣），或不建造。',
+    '結算順序固定：先紅色（別人向擲骰者收錢），再藍色（所有人從銀行拿）與綠色（擲骰者從銀行拿），最後紫色（擲骰者的大型建築）。',
+    '紅色收錢時，從擲骰者右手邊的玩家（逆時針）開始依序收；擲骰者錢不夠就只付得出來的部分，不足不補。',
+    '每位玩家每種紫色建築最多一張；其他建築不限張數。地標每種一座，必須全部蓋好才獲勝（基本版 4 座；加入港灣擴充為 6 座，市政廳不算）。',
+    '第一個蓋完所有地標的人立刻獲勝。',
+  ],
+  harbor: [
+    '每人多一張已建好的「市政廳」：結算收入後若你 0 元，拿 1 元。',
+    '新增兩座地標：港口（2 元，總和 10+ 可 +2）與機場（30 元，沒建造時拿 10 元）。獲勝需要蓋滿 6 座地標。',
+    '壽司店、鯖魚船、鮪魚船都要你自己已建港口才有效果。鮪魚船由擲骰玩家再擲 2 顆骰，所有有港口的鮪魚船共用同一個點數。',
+    '擴充建議使用「10 疊隨機市場」：把所有建築洗成一疊牌，翻到桌上有 10 種不同的建築為止（重複的疊在一起）；某一疊買光時再翻牌補到 10 種。紫色建築的張數等於玩家人數。',
+  ],
+  mr: [
+    '新增「整修」機制：被關閉整修的建築（翻面／放標記）不會發動；下次骰到它的號碼時，只會恢復營業而不產生效果。你新買的同種建築是營業中的。',
+    '釀酒廠發動後會自己關閉整修；裝修公司可以關閉所有人的某一種非紫色建築並向對手收錢。',
+    '多張卡會看「你已建幾座地標」（市政廳不算）：雜貨店、玉米田要少於 2 座才有效；法式餐廳、會員俱樂部則是擲骰者地標越多越慘。',
+    '拆除公司會逼你拆掉一座已建地標換 8 元；搬家公司會逼你送出一張建築換 4 元；貸款公司免費還倒拿 5 元，但之後每次發動要付 2 元。',
+    '科技新創：每回合結束前可投資 1 元放到卡上，發動時每位對手都要付你投資總額。',
+    '展覽館：發動時可以改成發動你的一張藍／綠建築，用完後退回供應區。',
+  ],
+  shopping: '購物中心讓你的 ☕ 與 🍞 建築每次發動多 1 元（花店、雜貨店算 🍞；壽司店、披薩店、漢堡店、法式餐廳算 ☕）。條件不成立的卡（例如沒港口的壽司店）不會發動，也就沒有加成。',
+};
+
+/* ===== 遊戲引擎（純邏輯，不碰 DOM） ===== */
+const E = (() => {
+  let rng = Math.random;
+  const d6 = () => 1 + Math.floor(rng() * 6);
+  const LOG_MAX = 120;
+
+  function log(s, text, cls) {
+    s.logN = (s.logN || 0) + 1;
+    s.log.push({t: text, c: cls || '', n: s.logN});
+    if (s.log.length > LOG_MAX) s.log.splice(0, s.log.length - LOG_MAX);
+  }
+  const P = s => s.players;
+  const A = s => s.players[s.turn.pi];
+  const name = p => p.name;
+
+  function cardsInPlay(s) {
+    return CARDS.filter(c => c.set === 'base' || (c.set === 'harbor' && s.settings.harbor) || (c.set === 'mr' && s.settings.mr));
+  }
+  function landmarksInPlay(s) {
+    return LANDMARKS.filter(l => l.set === 'base' || (l.set === 'harbor' && s.settings.harbor));
+  }
+  const lmCount = p => Object.values(p.lm).filter(Boolean).length;
+  const allBuilt = (s, p) => landmarksInPlay(s).every(l => p.lm[l.key]);
+  const openCopies = (p, id) => (p.est[id] || 0) - (p.closed[id] || 0);
+  function reopenAll(s, p, id) {
+    const n = p.closed[id] || 0;
+    if (n > 0) { delete p.closed[id]; log(s, `${name(p)} 的 ${CARD_BY_ID[id].zh}${n > 1 ? ' ×' + n : ''} 整修完成，恢復營業（本次不發動）`, 'sys'); }
+    return n;
+  }
+  const mallBonus = (p, card) => (p.lm.mall && (card.icon === 'cup' || card.icon === 'bread')) ? 1 : 0;
+  const countIcon = (p, icon) => Object.entries(p.est).reduce((n, [id, k]) => n + (CARD_BY_ID[id].icon === icon ? k : 0), 0);
+  const countCupBread = p => countIcon(p, 'cup') + countIcon(p, 'bread');
+  const addEst = (p, id, n = 1) => { p.est[id] = (p.est[id] || 0) + n; };
+  function removeEst(p, id, n = 1) {
+    p.est[id] = (p.est[id] || 0) - n;
+    if (p.est[id] <= 0) delete p.est[id];
+    if (p.closed[id] && p.closed[id] > (p.est[id] || 0)) { p.closed[id] = p.est[id] || 0; if (!p.closed[id]) delete p.closed[id]; }
+  }
+  function pay(from, to, amt) { // to may be null (bank)
+    const a = Math.min(from.coins, Math.max(0, amt));
+    from.coins -= a; if (to) to.coins += a; return a;
+  }
+  const opponents = s => P(s).filter((p, i) => i !== s.turn.pi);
+
+  /* ---------- 市場 ---------- */
+  function shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+  function buildMarket(s) {
+    const n = P(s).length;
+    const up = {}, deck = [];
+    for (const c of cardsInPlay(s)) {
+      const copies = c.color === 'purple' ? n : 6;
+      if (s.settings.market === 'all') up[c.id] = copies;
+      else for (let i = 0; i < copies; i++) deck.push(c.id);
+    }
+    s.market = {up, deck: shuffle(deck)};
+    refill(s);
+  }
+  function refill(s) {
+    if (s.settings.market === 'all') return;
+    const m = s.market;
+    while (Object.keys(m.up).length < 10 && m.deck.length) {
+      const id = m.deck.pop();
+      m.up[id] = (m.up[id] || 0) + 1;
+    }
+  }
+  function marketTake(s, id) {
+    const m = s.market;
+    if (!m.up[id]) return false;
+    m.up[id] -= 1; if (m.up[id] === 0) delete m.up[id];
+    refill(s); return true;
+  }
+  function marketReturn(s, id, n = 1) {
+    const m = s.market;
+    if (s.settings.market === 'all' || m.up[id]) m.up[id] = (m.up[id] || 0) + n;
+    else for (let i = 0; i < n; i++) m.deck.splice(Math.floor(rng() * (m.deck.length + 1)), 0, id);
+  }
+
+  /* ---------- 房間 / 開局 ---------- */
+  function newGame(code, hostUid, settings) {
+    return {
+      code, hostUid, status: 'lobby', createdAt: Date.now(), updatedAt: Date.now(), seq: 0, round: 0,
+      settings: Object.assign({harbor: true, mr: true, market: 'ten'}, settings || {}),
+      players: [], market: {up: {}, deck: []}, turn: null, queue: [], pending: null, log: [], winner: null,
+    };
+  }
+  function addPlayer(s, uid, pname) {
+    if (s.status !== 'lobby') return false;
+    if (P(s).some(p => p.uid === uid)) return false;
+    if (P(s).length >= 5) return false;
+    s.players.push({uid, name: pname, coins: 0, est: {}, closed: {}, lm: {}, tech: 0});
+    return true;
+  }
+  function removePlayer(s, uid) {
+    if (s.status !== 'lobby') return false;
+    s.players = s.players.filter(p => p.uid !== uid);
+    if (s.hostUid === uid && s.players.length) s.hostUid = s.players[0].uid;
+    return true;
+  }
+  function start(s) {
+    if (P(s).length < 2) return false;
+    s.status = 'playing'; s.winner = null; s.log = []; s.round = 1;
+    for (const p of P(s)) {
+      p.coins = 3; p.est = {wheat: 1, bakery: 1}; p.closed = {}; p.tech = 0; p.lm = {};
+      for (const l of landmarksInPlay(s)) p.lm[l.key] = false;
+    }
+    buildMarket(s);
+    const first = Math.floor(rng() * P(s).length);
+    s.queue = []; s.pending = null;
+    newTurn(s, first);
+    log(s, `遊戲開始！${P(s).map(name).join('、')} 各有 3 元、一座麥田與一間麵包店。${s.settings.harbor ? '（含市政廳）' : ''}`, 'sys');
+    log(s, `由 ${name(P(s)[first])} 先開始。`, 'sys');
+    return true;
+  }
+  function newTurn(s, pi) {
+    s.turn = {pi, step: 'roll', dice: [], raw: 0, total: 0, rerolled: false, harborUsed: false, doubles: false, built: false, invested: false, logFrom: s.logN || 0};
+  }
+  function rematch(s) {
+    if (s.status !== 'ended') return false;
+    return start(s);
+  }
+
+  /* ---------- 擲骰 ---------- */
+  function roll(s, nDice) {
+    const t = s.turn, a = A(s);
+    if (t.step !== 'roll') return false;
+    if (nDice === 2 && !a.lm.station) nDice = 1;
+    doRoll(s, nDice, false); return true;
+  }
+  function reroll(s) {
+    const t = s.turn, a = A(s);
+    if (t.step !== 'rolled' || !a.lm.tower || t.rerolled) return false;
+    doRoll(s, t.dice.length, true); return true;
+  }
+  function doRoll(s, nDice, isReroll) {
+    const t = s.turn;
+    t.dice = nDice === 2 ? [d6(), d6()] : [d6()];
+    t.raw = t.dice.reduce((x, y) => x + y, 0);
+    t.doubles = nDice === 2 && t.dice[0] === t.dice[1];
+    t.harborUsed = false; t.total = t.raw;
+    if (isReroll) t.rerolled = true;
+    t.step = 'rolled';
+    log(s, `${name(A(s))}${isReroll ? ' 重擲，' : ' '}擲出 ${t.dice.join(' + ')}${nDice === 2 ? ' = ' + t.raw : ''}${t.doubles ? '（雙骰同點！）' : ''}`, 'roll');
+  }
+  const canHarbor = s => s.turn.step === 'rolled' && A(s).lm.harbor && s.turn.raw >= 10;
+  function setHarbor(s, on) {
+    if (!canHarbor(s)) return false;
+    s.turn.harborUsed = !!on; s.turn.total = s.turn.raw + (on ? 2 : 0); return true;
+  }
+  function confirmRoll(s) {
+    if (s.turn.step !== 'rolled') return false;
+    if (s.turn.harborUsed) log(s, `${name(A(s))} 使用港口：總和 ${s.turn.raw} → ${s.turn.total}`, 'roll');
+    startIncome(s); return true;
+  }
+
+  /* ---------- 收入結算 ---------- */
+  function redAmount(card, owner, roller) {
+    const e = card.effect;
+    if (e.cond === 'harbor' && !owner.lm.harbor) return 0;
+    if (e.cond === 'lmgte2' && lmCount(roller) < 2) return 0;
+    if (e.cond === 'lmgte3' && lmCount(roller) < 3) return 0;
+    if (e.kind === 'takeAll') return Infinity;
+    return e.amt + mallBonus(owner, card);
+  }
+  function startIncome(s) {
+    const n = s.turn.total, ai = s.turn.pi, ps = P(s), L = ps.length, a = ps[ai];
+    s.turn.step = 'income';
+    const cards = cardsInPlay(s);
+    // 1) 紅色：逆時針從擲骰者右手邊開始
+    for (let i = 1; i < L; i++) {
+      const p = ps[(ai - i + L) % L];
+      for (const card of cards) {
+        if (card.color !== 'red' || !card.nums.includes(n) || !p.est[card.id]) continue;
+        const open = openCopies(p, card.id); reopenAll(s, p, card.id);
+        if (!open) continue;
+        const per = redAmount(card, p, a);
+        if (per === 0) { log(s, `${name(p)} 的 ${card.zh} 條件不符，沒有發動`, 'muted'); continue; }
+        const want = per === Infinity ? a.coins : per * open;
+        const got = pay(a, p, want);
+        if (got > 0) log(s, `${name(p)} 的 ${card.zh}${open > 1 ? ' ×' + open : ''} 向 ${name(a)} 收了 ${got} 元${got < want ? '（錢不夠，只付得出這些）' : ''}`, 'red');
+        else log(s, `${name(p)} 的 ${card.zh} 發動，但 ${name(a)} 已經沒錢可付`, 'muted');
+      }
+    }
+    // 2) 藍色：所有人
+    let tunaRoll = null;
+    for (let i = 0; i < L; i++) {
+      const p = ps[(ai + i) % L];
+      for (const card of cards) {
+        if (card.color !== 'blue' || !card.nums.includes(n) || !p.est[card.id]) continue;
+        const open = openCopies(p, card.id); reopenAll(s, p, card.id);
+        if (!open) continue;
+        if (card.effect.kind === 'tuna') {
+          if (!p.lm.harbor) { log(s, `${name(p)} 的鮪魚船沒有港口，無法出海`, 'muted'); continue; }
+          if (tunaRoll === null) { tunaRoll = d6() + d6(); log(s, `鮪魚船出海：${name(a)} 擲出 ${tunaRoll} 點`, 'roll'); }
+          p.coins += tunaRoll * open;
+          log(s, `${name(p)} 的鮪魚船${open > 1 ? ' ×' + open : ''} 從銀行拿了 ${tunaRoll * open} 元`, 'blue');
+          continue;
+        }
+        const e = card.effect;
+        if (e.cond === 'harbor' && !p.lm.harbor) { log(s, `${name(p)} 的 ${card.zh} 沒有港口，沒有發動`, 'muted'); continue; }
+        if (e.cond === 'lt2' && lmCount(p) >= 2) { log(s, `${name(p)} 的 ${card.zh} 因地標已達 2 座，沒有發動`, 'muted'); continue; }
+        const gain = e.amt * open;
+        p.coins += gain;
+        log(s, `${name(p)} 的 ${card.zh}${open > 1 ? ' ×' + open : ''} 從銀行拿了 ${gain} 元`, 'blue');
+      }
+    }
+    // 3) 綠色：只有擲骰者
+    const deferred = [];
+    for (const card of cards) {
+      if (card.color !== 'green' || !card.nums.includes(n) || !a.est[card.id]) continue;
+      const open = openCopies(a, card.id); reopenAll(s, a, card.id);
+      if (!open) continue;
+      if (card.effect.kind === 'demolition' || card.effect.kind === 'moving') { deferred.push({id: card.id, copies: open}); continue; }
+      applyGreen(s, a, card, open);
+    }
+    for (const d of deferred) s.queue.push({k: 'card', id: d.id, copies: d.copies});
+    // 4) 紫色
+    const purples = cards.filter(c => c.color === 'purple' && c.nums.includes(n) && a.est[c.id]).map(c => c.id);
+    if (purples.length) s.queue.push({k: 'purples', ids: purples});
+    continueQueue(s);
+  }
+  function applyGreen(s, p, card, open) {
+    const e = card.effect; let gain = 0;
+    switch (e.kind) {
+      case 'bank': gain = (e.amt + mallBonus(p, card)) * open; break;
+      case 'perIcon': gain = (countIcon(p, e.icon) * e.amt + mallBonus(p, card)) * open; break;
+      case 'general':
+        if (lmCount(p) >= 2) { log(s, `${name(p)} 的雜貨店因地標已達 2 座，沒有發動`, 'muted'); return; }
+        gain = (2 + mallBonus(p, card)) * open; break;
+      case 'soda': gain = P(s).reduce((t, q) => t + countIcon(q, 'cup'), 0) * open; break;
+      case 'loan': { const paid = pay(p, null, 2 * open); log(s, `${name(p)} 的貸款公司${open > 1 ? ' ×' + open : ''}：付給銀行 ${paid} 元`, 'green'); return; }
+      case 'winery': {
+        const v = p.est.vineyard || 0;
+        gain = 6 * v * open;
+        p.coins += gain;
+        p.closed[card.id] = p.est[card.id];
+        log(s, `${name(p)} 的釀酒廠${open > 1 ? ' ×' + open : ''} 從銀行拿了 ${gain} 元（${v} 座葡萄園），然後關閉整修`, 'green');
+        return;
+      }
+      default: return;
+    }
+    p.coins += gain;
+    log(s, `${name(p)} 的 ${card.zh}${open > 1 ? ' ×' + open : ''} 從銀行拿了 ${gain} 元`, 'green');
+  }
+  /* 擲骰者自己的一張藍/綠卡發動（用於搬家/拆除的逐張處理與展覽館） */
+  function activateOwn(s, card, copies) {
+    const a = A(s);
+    if (card.color === 'blue') {
+      const e = card.effect;
+      if (e.kind === 'tuna') {
+        if (!a.lm.harbor) { log(s, `${name(a)} 的鮪魚船沒有港口，無法出海`, 'muted'); return; }
+        const r = d6() + d6(); a.coins += r * copies;
+        log(s, `鮪魚船出海：${name(a)} 擲出 ${r} 點，拿了 ${r * copies} 元`, 'blue'); return;
+      }
+      if (e.cond === 'harbor' && !a.lm.harbor) { log(s, `${name(a)} 的 ${card.zh} 沒有港口，沒有發動`, 'muted'); return; }
+      if (e.cond === 'lt2' && lmCount(a) >= 2) { log(s, `${name(a)} 的 ${card.zh} 因地標已達 2 座，沒有發動`, 'muted'); return; }
+      a.coins += e.amt * copies;
+      log(s, `${name(a)} 的 ${card.zh}${copies > 1 ? ' ×' + copies : ''} 從銀行拿了 ${e.amt * copies} 元`, 'blue'); return;
+    }
+    if (card.color === 'green') {
+      if (card.effect.kind === 'demolition') {
+        if (!landmarksInPlay(s).some(l => a.lm[l.key])) { log(s, `${name(a)} 的拆除公司發動，但沒有可拆的地標`, 'muted'); return; }
+        s.pending = {k: 'demolition', copies}; return;
+      }
+      if (card.effect.kind === 'moving') { s.pending = {k: 'moving', copies}; return; }
+      applyGreen(s, a, card, copies);
+    }
+  }
+
+  function continueQueue(s) {
+    while (!s.pending && s.queue.length) {
+      const it = s.queue.shift();
+      if (it.k === 'card') activateOwn(s, CARD_BY_ID[it.id], it.copies);
+      else if (it.k === 'purples') {
+        if (it.ids.length === 1) activatePurple(s, it.ids[0]);
+        else if (it.ids.length > 1) s.pending = {k: 'purpleOrder', ids: it.ids};
+      }
+    }
+    if (!s.pending && !s.queue.length && s.turn.step === 'income') enterBuild(s);
+  }
+  function enterBuild(s) {
+    const a = A(s);
+    s.turn.step = 'build';
+    if (s.settings.harbor && a.coins === 0) { a.coins = 1; log(s, `${name(a)} 結算後 0 元，市政廳補助 1 元`, 'sys'); }
+  }
+
+  /* ---------- 紫色 ---------- */
+  function activatePurple(s, id) {
+    const a = A(s), opps = opponents(s);
+    switch (id) {
+      case 'stadium': {
+        const parts = opps.map(o => { const g = pay(o, a, 2); return g ? `${name(o)} ${g} 元` : null; }).filter(Boolean);
+        log(s, `${name(a)} 的體育館：${parts.length ? '向 ' + parts.join('、') + ' 收錢' : '對手都沒錢'}`, 'purple'); break;
+      }
+      case 'tv':
+        if (opps.some(o => o.coins > 0)) s.pending = {k: 'tv'};
+        else log(s, `${name(a)} 的電視台發動，但對手都沒錢`, 'muted');
+        break;
+      case 'business': {
+        const mine = Object.keys(a.est).filter(cid => CARD_BY_ID[cid].color !== 'purple');
+        const theirs = opps.some(o => Object.keys(o.est).some(cid => CARD_BY_ID[cid].color !== 'purple'));
+        if (mine.length && theirs) s.pending = {k: 'business'};
+        else log(s, `${name(a)} 的商業中心發動，但沒有可交換的建築`, 'muted');
+        break;
+      }
+      case 'publisher': {
+        const parts = opps.map(o => { const g = pay(o, a, countCupBread(o)); return g ? `${name(o)} ${g} 元` : null; }).filter(Boolean);
+        log(s, `${name(a)} 的出版社：${parts.length ? '向 ' + parts.join('、') + ' 收錢' : '沒收到錢'}`, 'purple'); break;
+      }
+      case 'tax': {
+        const parts = opps.map(o => { if (o.coins < 10) return null; const g = pay(o, a, Math.floor(o.coins / 2)); return `${name(o)} ${g} 元`; }).filter(Boolean);
+        log(s, `${name(a)} 的稅務局：${parts.length ? '向 ' + parts.join('、') + ' 課稅' : '沒有對手持有 10 元以上'}`, 'purple'); break;
+      }
+      case 'park': {
+        const ps = P(s), total = ps.reduce((t, p) => t + p.coins, 0), per = Math.ceil(total / ps.length);
+        ps.forEach(p => { p.coins = per; });
+        log(s, `${name(a)} 的公園：所有人的錢（共 ${total} 元）平均分配，每人 ${per} 元${per * ps.length > total ? '（銀行補 ' + (per * ps.length - total) + ' 元）' : ''}`, 'purple'); break;
+      }
+      case 'renovation': {
+        const types = new Set(); P(s).forEach(p => Object.keys(p.est).forEach(cid => { if (CARD_BY_ID[cid].color !== 'purple') types.add(cid); }));
+        if (types.size) s.pending = {k: 'renovation'};
+        else log(s, `${name(a)} 的裝修公司發動，但沒有可整修的建築`, 'muted');
+        break;
+      }
+      case 'tech': {
+        const inv = a.tech || 0;
+        if (!inv) { log(s, `${name(a)} 的科技新創還沒有投資，沒有收入`, 'muted'); break; }
+        const parts = opps.map(o => { const g = pay(o, a, inv); return g ? `${name(o)} ${g} 元` : null; }).filter(Boolean);
+        log(s, `${name(a)} 的科技新創（投資 ${inv} 元）：${parts.length ? '向 ' + parts.join('、') + ' 收錢' : '對手都沒錢'}`, 'purple'); break;
+      }
+      case 'exhibit': {
+        const cands = Object.keys(a.est).filter(cid => ['blue', 'green'].includes(CARD_BY_ID[cid].color));
+        if (cands.length) s.pending = {k: 'exhibit'};
+        else log(s, `${name(a)} 的展覽館發動，但沒有可改為發動的建築`, 'muted');
+        break;
+      }
+    }
+  }
+
+  /* ---------- 玩家決定 ---------- */
+  function decide(s, choice) {
+    const pd = s.pending; if (!pd) return false;
+    const a = A(s), ps = P(s);
+    switch (pd.k) {
+      case 'purpleOrder': {
+        if (!pd.ids.includes(choice.id)) return false;
+        const rest = pd.ids.filter(x => x !== choice.id);
+        s.pending = null;
+        if (rest.length) s.queue.unshift({k: 'purples', ids: rest});
+        activatePurple(s, choice.id); break;
+      }
+      case 'tv': {
+        const o = ps[choice.pid]; if (!o || o === a) return false;
+        s.pending = null;
+        const g = pay(o, a, 5);
+        log(s, `${name(a)} 的電視台向 ${name(o)} 收了 ${g} 元`, 'purple'); break;
+      }
+      case 'business': {
+        s.pending = null;
+        if (!choice || choice.skip) { log(s, `${name(a)} 的商業中心：選擇不交換`, 'muted'); break; }
+        const o = ps[choice.pid];
+        if (!o || o === a || !a.est[choice.mine] || !o.est[choice.theirs]) return false;
+        if (CARD_BY_ID[choice.mine].color === 'purple' || CARD_BY_ID[choice.theirs].color === 'purple') return false;
+        removeEst(a, choice.mine); addEst(o, choice.mine);
+        removeEst(o, choice.theirs); addEst(a, choice.theirs);
+        log(s, `${name(a)} 的商業中心：用 ${CARD_BY_ID[choice.mine].zh} 和 ${name(o)} 交換了 ${CARD_BY_ID[choice.theirs].zh}`, 'purple'); break;
+      }
+      case 'renovation': {
+        const card = CARD_BY_ID[choice.id];
+        if (!card || card.color === 'purple' || !ps.some(p => p.est[choice.id])) return false;
+        s.pending = null;
+        const parts = [];
+        for (const p of ps) {
+          if (!p.est[choice.id]) continue;
+          p.closed[choice.id] = p.est[choice.id];
+          if (p !== a) { const g = pay(p, a, p.est[choice.id]); if (g) parts.push(`${name(p)} ${g} 元`); }
+        }
+        log(s, `${name(a)} 的裝修公司：所有人的 ${card.zh} 全部關閉整修${parts.length ? '，向 ' + parts.join('、') + ' 收錢' : ''}`, 'purple'); break;
+      }
+      case 'exhibit': {
+        s.pending = null;
+        if (!choice || choice.skip) { log(s, `${name(a)} 的展覽館：選擇不發動`, 'muted'); break; }
+        const card = CARD_BY_ID[choice.id];
+        if (!card || !a.est[choice.id] || !['blue', 'green'].includes(card.color)) return false;
+        const open = openCopies(a, choice.id); reopenAll(s, a, choice.id);
+        removeEst(a, 'exhibit'); marketReturn(s, 'exhibit');
+        log(s, `${name(a)} 的展覽館改為發動 ${card.zh}，展覽館退回供應區`, 'purple');
+        if (open) s.queue.unshift({k: 'card', id: choice.id, copies: open});
+        break;
+      }
+      case 'demolition': {
+        const l = LM_BY_KEY[choice.key];
+        if (!l || !a.lm[choice.key]) return false;
+        a.lm[choice.key] = false; a.coins += 8;
+        log(s, `${name(a)} 的拆除公司：拆除了 ${l.zh}，從銀行拿了 8 元`, 'green');
+        const left = pd.copies - 1;
+        s.pending = (left > 0 && landmarksInPlay(s).some(x => a.lm[x.key])) ? {k: 'demolition', copies: left} : null;
+        if (left > 0 && !s.pending) log(s, `${name(a)} 已沒有可拆的地標`, 'muted');
+        break;
+      }
+      case 'moving': {
+        const o = ps[choice.pid], card = CARD_BY_ID[choice.id];
+        if (!o || o === a || !card || card.color === 'purple' || !a.est[choice.id]) return false;
+        removeEst(a, choice.id); addEst(o, choice.id); a.coins += 4;
+        log(s, `${name(a)} 的搬家公司：把 ${card.zh} 送給了 ${name(o)}，從銀行拿了 4 元`, 'green');
+        const left = pd.copies - 1;
+        s.pending = left > 0 ? {k: 'moving', copies: left} : null;
+        break;
+      }
+      default: return false;
+    }
+    continueQueue(s);
+    return true;
+  }
+
+  /* ---------- 建造 ---------- */
+  function canBuyCard(s, id) {
+    if (!s.turn || s.turn.step !== 'build' || s.turn.built) return false;
+    const a = A(s), card = CARD_BY_ID[id];
+    if (!card || !s.market.up[id]) return false;
+    if (card.cost > a.coins) return false;
+    if (card.color === 'purple' && a.est[id]) return false;
+    return true;
+  }
+  function canBuyLandmark(s, key) {
+    if (!s.turn || s.turn.step !== 'build' || s.turn.built) return false;
+    const a = A(s), l = LM_BY_KEY[key];
+    return !!l && landmarksInPlay(s).includes(l) && !a.lm[key] && l.cost <= a.coins;
+  }
+  const canInvest = s => s.turn && s.turn.step === 'build' && !s.turn.invested && A(s).est.tech > 0 && A(s).coins >= 1;
+
+  function buyCard(s, id) {
+    if (!canBuyCard(s, id)) return false;
+    const a = A(s), card = CARD_BY_ID[id];
+    a.coins -= card.cost; addEst(a, id); marketTake(s, id); s.turn.built = true;
+    log(s, `${name(a)} 花 ${card.cost} 元建造了 ${card.zh}`, 'buy');
+    if (card.effect.kind === 'loan') { a.coins += 5; log(s, `貸款公司：${name(a)} 從銀行拿了 5 元`, 'green'); }
+    afterBuild(s); return true;
+  }
+  function buyLandmark(s, key) {
+    if (!canBuyLandmark(s, key)) return false;
+    const a = A(s), l = LM_BY_KEY[key];
+    a.coins -= l.cost; a.lm[key] = true; s.turn.built = true;
+    log(s, `${name(a)} 花 ${l.cost} 元建造了地標「${l.zh}」`, 'buy');
+    if (allBuilt(s, a)) { s.status = 'ended'; s.winner = s.turn.pi; log(s, `🎉 ${name(a)} 蓋完所有地標，獲得勝利！`, 'win'); return true; }
+    afterBuild(s); return true;
+  }
+  function afterBuild(s) { if (!canInvest(s)) endTurn(s); }
+  function invest(s) {
+    if (!canInvest(s)) return false;
+    const a = A(s); a.coins -= 1; a.tech += 1; s.turn.invested = true;
+    log(s, `${name(a)} 投資 1 元到科技新創（累計 ${a.tech} 元）`, 'buy');
+    if (s.turn.built) endTurn(s);
+    return true;
+  }
+  function endTurn(s) {
+    if (!s.turn || s.turn.step !== 'build' || s.status !== 'playing') return false;
+    const a = A(s), t = s.turn;
+    if (!t.built) {
+      if (a.lm.airport) { a.coins += 10; log(s, `${name(a)} 這回合沒有建造，機場補助 10 元`, 'sys'); }
+      else log(s, `${name(a)} 這回合沒有建造`, 'muted');
+    }
+    nextTurn(s, t.doubles && a.lm.amuse);
+    return true;
+  }
+  function nextTurn(s, extra) {
+    const L = P(s).length;
+    if (extra) { log(s, `${name(A(s))} 擲出雙骰同點，遊樂園再給一回合！`, 'sys'); newTurn(s, s.turn.pi); }
+    else { const ni = (s.turn.pi + 1) % L; if (ni === 0) s.round += 1; newTurn(s, ni); }
+  }
+  function forceSkip(s) { // 主持人強制結束目前回合
+    if (s.status !== 'playing') return false;
+    log(s, `主持人強制結束了 ${name(A(s))} 的回合`, 'sys');
+    s.queue = []; s.pending = null;
+    const L = P(s).length, ni = (s.turn.pi + 1) % L; if (ni === 0) s.round += 1; newTurn(s, ni);
+    return true;
+  }
+
+  /* 依身分套用玩家動作（房主／輪到的人才能做對應的事） */
+  const TURN_ACTS = {roll: 1, reroll: 1, confirmRoll: 1, decide: 1, buyCard: 1, buyLandmark: 1, invest: 1, endTurn: 1, setHarbor: 1};
+  function apply(s, action, args, from) {
+    args = args || [];
+    const host = s.hostUid === from;
+    const active = s.status === 'playing' && s.turn && s.players[s.turn.pi] && s.players[s.turn.pi].uid === from;
+    switch (action) {
+      case 'start': return host && start(s);
+      case 'rematch': return host && rematch(s);
+      case 'forceSkip': return host && forceSkip(s);
+      case 'setting': {
+        if (!host || s.status !== 'lobby') return false;
+        const [key, on] = args;
+        if (key === 'market') s.settings.market = on ? 'ten' : 'all';
+        else if (key === 'harbor' || key === 'mr') s.settings[key] = !!on;
+        else return false;
+        return true;
+      }
+      default:
+        if (!TURN_ACTS[action] || !active) return false;
+        return API[action](s, ...args);
+    }
+  }
+  const API = {
+    setRng: f => { rng = f; },
+    cardsInPlay, landmarksInPlay, lmCount, openCopies, countIcon,
+    newGame, addPlayer, removePlayer, start, rematch,
+    roll, reroll, canHarbor, setHarbor, confirmRoll, decide,
+    canBuyCard, canBuyLandmark, canInvest, buyCard, buyLandmark, invest, endTurn, forceSkip, apply,
+  };
+  return API;
+})();
+
+/* ===== 連線層：免帳號版（房主的瀏覽器當主機，玩家用 WebRTC 直連） ===== */
+const NET = (() => {
+  const PREFIX = 'dicestreet-';
+  /* 在 claude.ai 頁面內（有 window.claude）無法連到 WebRTC 的連線伺服器，改成提供檔案下載 */
+  const inViewer = !!(window.claude && typeof window.claude.use === 'function');
+  const PAGE_SOURCE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  let uid = null, role = null;            // 'host' | 'guest' | null
+  let peer = null, hostConn = null;       // guest 端
+  const conns = {};                       // host 端：uid -> DataConnection
+  let code = '', wantRoom = null, status = 'idle', statusMsg = '';
+  let reconnectTimer = null, joinTimer = null;
+  const ls = () => APP.ls;
+  const toast = m => APP.toast(m);
+  const hasPeerLib = () => typeof Peer !== 'undefined';
+  function genCode() { const a = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; let c = ''; for (let i = 0; i < 4; i++) c += a[Math.floor(Math.random() * a.length)]; return c; }
+  const setStatus = (st, msg) => { status = st; statusMsg = msg || ''; APP.render(); };
+  const saveHost = () => { if (role === 'host' && APP.S) ls().set('mk_host_state', JSON.stringify(APP.S)); };
+
+  function init() {
+    uid = ls().get('mk_uid', '') || ('p' + Math.random().toString(36).slice(2, 12)); ls().set('mk_uid', uid);
+    APP.setUid(uid); APP.render();
+    if (inViewer) return;
+    const saved = ls().get('mk_room', '');
+    let hostState = null; try { hostState = JSON.parse(ls().get('mk_host_state', '')); } catch (e) {}
+    if (saved && !(hostState && hostState.status !== 'ended') && APP.name()) joinRoom(saved, true);
+    window.addEventListener('beforeunload', e => { if (role === 'host' && APP.S && APP.S.status === 'playing') { e.preventDefault(); e.returnValue = ''; } });
+  }
+
+  /* ---------- 房主 ---------- */
+  function openHostPeer(c, onReady, tries, isResume) {
+    if (!hasPeerLib()) return toast('連線元件載入失敗，請確認網路後重新整理頁面');
+    setStatus('connecting', '正在向連線伺服器登記房號…');
+    const p = new Peer(PREFIX + c, {debug: 0});
+    p.on('open', () => { peer = p; role = 'host'; code = c; setStatus('online'); onReady(); });
+    p.on('connection', onConnection);
+    p.on('disconnected', () => { setStatus('reconnecting', '與連線伺服器斷線，重新連線中（已連上的玩家不受影響）'); try { if (!p.destroyed) p.reconnect(); } catch (e) {} });
+    p.on('error', err => {
+      console.error('peer', err);
+      if (err.type === 'unavailable-id') {
+        try { p.destroy(); } catch (e) {}
+        setStatus('idle', '');
+        if (isResume) toast('房號 ' + c + ' 還在使用中（舊分頁可能還開著），等幾秒後再按一次恢復');
+        else if (tries > 0) createRoom(pendingSettings, tries - 1);
+        else toast('建立房間失敗，請再試一次');
+        return;
+      }
+      if (!peer) { setStatus('idle', ''); toast('無法連上連線伺服器（' + err.type + '），請稍後再試'); }
+      else if (err.type === 'network' || err.type === 'server-error') setStatus('reconnecting', '連線伺服器暫時無法連上，重試中…');
+    });
+  }
+  let pendingSettings = null;
+  function createRoom(settings, tries = 3) {
+    if (inViewer) return toast('請先下載檔案，用瀏覽器直接開啟後再建立房間');
+    if (!APP.name()) return toast('先輸入你的暱稱');
+    pendingSettings = settings;
+    const c = genCode();
+    openHostPeer(c, () => {
+      const s = E.newGame(c, uid, settings); E.addPlayer(s, uid, APP.name());
+      APP.setState(s); APP.setView('room'); ls().set('mk_room', c); saveHost(); APP.render();
+    }, tries);
+  }
+  function resume() {
+    let s; try { s = JSON.parse(ls().get('mk_host_state', '')); } catch (e) { return; }
+    if (!s || !s.code) return;
+    s.hostUid = uid;
+    openHostPeer(s.code, () => { APP.setState(s); APP.setView('room'); ls().set('mk_room', s.code); saveHost(); APP.render(); bump(); }, 0, true);
+  }
+  function onConnection(conn) {
+    conn.on('data', msg => onGuestMessage(conn, msg));
+    conn.on('open', () => { try { conn.send({type: 'state', s: APP.S}); } catch (e) {} });
+    conn.on('close', () => { if (conn._uid && conns[conn._uid] === conn) { delete conns[conn._uid]; APP.render(); } });
+    conn.on('error', e => console.error('conn', e));
+  }
+  function bump() {
+    const S = APP.S; if (!S) return;
+    S.seq = (S.seq || 0) + 1; S.updatedAt = Date.now(); saveHost(); APP.render(); broadcast();
+  }
+  function broadcast() {
+    const msg = {type: 'state', s: APP.S};
+    Object.values(conns).forEach(c => { if (c.open) try { c.send(msg); } catch (e) { console.error(e); } });
+  }
+  function onGuestMessage(conn, msg) {
+    const S = APP.S; if (!S || !msg || typeof msg !== 'object') return;
+    if (msg.type === 'join') {
+      const u = String(msg.uid || '').slice(0, 40); if (!u) return;
+      const old = conns[u]; if (old && old !== conn) { try { old.close(); } catch (e) {} }
+      conn._uid = u; conns[u] = conn;
+      if (S.status === 'lobby' && !S.players.some(p => p.uid === u)) {
+        if (!E.addPlayer(S, u, String(msg.name || '玩家').slice(0, 12))) { try { conn.send({type: 'err', msg: '房間已滿（5 人）'}); } catch (e) {} }
+      }
+      bump(); return;
+    }
+    if (!conn._uid) return;
+    if (msg.type === 'leave') { if (S.status === 'lobby') E.removePlayer(S, conn._uid); delete conns[conn._uid]; conn._uid = null; bump(); return; }
+    if (msg.type === 'act') {
+      const ok = E.apply(S, String(msg.name), Array.isArray(msg.args) ? msg.args : [], conn._uid);
+      if (ok === false) { try { conn.send({type: 'err', msg: '這個動作現在不能執行'}); conn.send({type: 'state', s: S}); } catch (e) {} }
+      else bump();
+    }
+  }
+
+  /* ---------- 玩家 ---------- */
+  function joinRoom(c, quiet) {
+    if (inViewer) return toast('請先下載檔案，用瀏覽器直接開啟後再加入房間');
+    c = (c || '').toUpperCase().trim();
+    if (!/^[A-Z]{4}$/.test(c)) return toast('房號是 4 個英文字母');
+    if (!APP.name()) return toast('先輸入你的暱稱');
+    if (!hasPeerLib()) return toast('連線元件載入失敗，請確認網路後重新整理頁面');
+    if (role === 'host') return toast('你已經是房主，請先關閉房間');
+    wantRoom = c; code = c; role = 'guest';
+    setStatus('connecting', `正在連線到房間 ${c}…`);
+    ensurePeer().then(connectToHost);
+  }
+  function ensurePeer() {
+    return new Promise(res => {
+      if (peer && !peer.destroyed) return res();
+      const p = new Peer({debug: 0});
+      p.on('open', () => { peer = p; res(); });
+      p.on('disconnected', () => { try { if (!p.destroyed) p.reconnect(); } catch (e) {} });
+      p.on('error', err => {
+        console.error('peer', err);
+        if (err.type === 'peer-unavailable') { setStatus('notfound', `找不到房間 ${wantRoom}：房主的頁面要開著，房號也要正確。會每幾秒自動重試。`); scheduleReconnect(); }
+        else if (!peer) { setStatus('idle', ''); toast('無法連上連線伺服器（' + err.type + '），請稍後再試'); role = null; wantRoom = null; }
+        else { setStatus('reconnecting', '連線異常，重試中…'); scheduleReconnect(); }
+      });
+    });
+  }
+  function connectToHost() {
+    if (!wantRoom || !peer) return;
+    if (hostConn) { try { hostConn.close(); } catch (e) {} hostConn = null; }
+    const conn = peer.connect(PREFIX + wantRoom, {reliable: true, serialization: 'json'});
+    if (!conn) { setStatus('reconnecting', '連線中…'); scheduleReconnect(); return; }
+    hostConn = conn;
+    clearTimeout(joinTimer);
+    joinTimer = setTimeout(() => { if (hostConn === conn && !conn.open) { setStatus('timeout', `連線到房間 ${wantRoom} 逾時，重試中…（若一直失敗，試試換網路）`); scheduleReconnect(); } }, 12000);
+    conn.on('open', () => { clearTimeout(joinTimer); setStatus('online'); conn.send({type: 'join', uid, name: APP.name()}); ls().set('mk_room', wantRoom); });
+    conn.on('data', msg => onHostMessage(msg));
+    conn.on('close', () => { if (hostConn === conn && wantRoom) { setStatus('disconnected', '與房主斷線，重新連線中…'); scheduleReconnect(); } });
+    conn.on('error', e => console.error('conn', e));
+  }
+  function scheduleReconnect() {
+    clearTimeout(reconnectTimer);
+    if (!wantRoom) return;
+    reconnectTimer = setTimeout(() => { if (wantRoom && (!hostConn || !hostConn.open)) ensurePeer().then(connectToHost); }, 4000);
+  }
+  function onHostMessage(msg) {
+    if (!msg || typeof msg !== 'object') return;
+    if (msg.type === 'state' && msg.s && msg.s.code) { APP.setState(msg.s); if (APP.view !== 'room') APP.setView('room'); APP.render(); }
+    else if (msg.type === 'err') toast(String(msg.msg || ''));
+    else if (msg.type === 'closed') { toast('房主關閉了房間'); leave(true); }
+  }
+
+  /* ---------- 共用 ---------- */
+  function send(name, ...args) {
+    if (role === 'host') { const ok = E.apply(APP.S, name, args, uid); if (ok === false) return; bump(); return; }
+    if (hostConn && hostConn.open) { try { hostConn.send({type: 'act', name, args}); } catch (e) { toast('傳送失敗，請再試一次'); } }
+    else toast('尚未連上房主，請稍候');
+  }
+  function leave(silent) {
+    if (role === 'host') {
+      if (!silent && APP.S && APP.S.status !== 'ended' && !confirm('關閉房間會結束所有人的遊戲，確定嗎？')) return;
+      Object.values(conns).forEach(c => { try { c.send({type: 'closed'}); } catch (e) {} });
+      setTimeout(() => { try { peer && peer.destroy(); } catch (e) {} }, 300);
+      Object.keys(conns).forEach(k => delete conns[k]);
+      ls().del('mk_host_state');
+    } else {
+      wantRoom = null; clearTimeout(reconnectTimer); clearTimeout(joinTimer);
+      const hc = hostConn, pr = peer; hostConn = null;
+      if (hc) { try { if (hc.open) hc.send({type: 'leave'}); } catch (e) {} }
+      setTimeout(() => { try { hc && hc.close(); } catch (e) {} try { pr && pr.destroy(); } catch (e) {} }, 300);
+    }
+    peer = null; role = null; code = ''; ls().del('mk_room');
+    APP.setState(null); APP.setView('home'); setStatus('idle', '');
+  }
+  async function downloadSelf() {
+    try {
+      const dl = await window.claude.use('downloads');
+      if (!dl) return toast('這裡無法下載，請改用對話中附的檔案');
+      await dl.save({filename: 'dice-street-no-account.html', data: PAGE_SOURCE});
+    } catch (e) { if (!e || e.code !== 'declined') { console.error(e); toast('下載失敗，請改用對話中附的檔案'); } }
+  }
+  document.addEventListener('click', e => { if (e.target.closest('[data-act="download"]')) downloadSelf(); });
+  function homeStatusHTML() {
+    if (inViewer) return `<div class="status warn">這是免帳號版：它靠房主的瀏覽器直連，在 claude.ai 頁面內連不到連線伺服器，所以這裡只能看、不能開房。請下載檔案後直接用瀏覽器開啟（或放到自己的網址），朋友不需要任何帳號就能加入。<div class="btn-row" style="margin-top:8px"><button class="btn" data-act="download">下載 dice-street-no-account.html</button></div></div>`;
+    if (status === 'idle' || APP.view === 'room') return '';
+    const cls = status === 'online' ? '' : (status === 'notfound' || status === 'timeout' ? 'bad' : 'warn');
+    return `<div class="status ${cls}">${statusMsg ? APP_esc(statusMsg) : '連線中…'} ${wantRoom ? '<button class="btn ghost" style="padding:4px 10px;font-size:13px;margin-left:8px" data-act="leave">取消</button>' : ''}</div>`;
+  }
+  const APP_esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+  function homeExtraHTML() {
+    let s = null; try { s = JSON.parse(ls().get('mk_host_state', '')); } catch (e) {}
+    if (!s || !s.code || s.status === 'ended') return '';
+    return `<div class="hint" style="margin-top:10px">上一場（房號 <b>${APP_esc(s.code)}</b>，${APP_esc(s.players.map(p => p.name).join('、'))}）還沒結束。<div class="btn-row" style="margin-top:8px"><button class="btn soft" data-act="resume">恢復這一場</button></div></div>`;
+  }
+  const homeNoteHTML = () => `<b>免帳號版怎麼運作：</b>房主的瀏覽器就是主機，所有人透過 WebRTC 直接連到房主，不需要任何帳號或伺服器。房主的分頁要一直開著（關掉就等於收桌，但可以用「恢復這一場」接續）。玩家只要打開同一個檔案或網址、輸入房號即可；若有人一直連不上，通常是網路環境限制，換成 Wi‑Fi 或行動網路再試。`;
+  function connStatusHTML() {
+    if (role === 'host') {
+      const S = APP.S, online = S ? S.players.filter(p => p.uid === uid || (conns[p.uid] && conns[p.uid].open)).length : 0;
+      return `<span class="code" title="${APP_esc(statusMsg)}">${status === 'online' ? '🟢' : '🟠'} 已連線 ${online}/${S ? S.players.length : 0} 人</span>`;
+    }
+    return `<span class="code">${hostConn && hostConn.open ? '🟢 已連上房主' : '🟠 ' + (statusMsg || '重新連線中…')}</span>`;
+  }
+
+  return {
+    hasRoomList: false, hostOwnsRoom: true,
+    init, createRoom, joinRoom, joinFromList: joinRoom, leave: () => leave(false), resume, rooms: () => [],
+    send, homeStatusHTML, homeNoteHTML, homeExtraHTML, connStatusHTML,
+  };
+})();
+
+/* ===== 畫面與操作（共用；連線方式由 NET 提供） ===== */
+const APP = (() => {
+  const $ = s => document.querySelector(s);
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+  const attr = o => esc(JSON.stringify(o));
+  const ls = { get: (k, d) => { try { return localStorage.getItem(k) ?? d; } catch (e) { return d; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} }, del: k => { try { localStorage.removeItem(k); } catch (e) {} } };
+
+  let view = 'home', S = null, uid = null;
+  let myName = ls.get('mk_name', '');
+  const ui = { biz: null, move: null, openCities: new Set(), lastDiceKey: '', diceChangedAt: 0 };
+
+  const me = () => S && S.players.find(p => p.uid === uid);
+  const isMyTurn = () => !!(S && S.turn && S.status === 'playing' && S.players[S.turn.pi].uid === uid);
+  const isHost = () => !!(S && S.hostUid === uid);
+  const pname = i => S.players[i] ? S.players[i].name : '?';
+
+  function toast(msg, ms = 3200) {
+    let t = $('#toast'); if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; document.body.appendChild(t); }
+    t.textContent = msg; t.style.display = 'block'; clearTimeout(t._tm); t._tm = setTimeout(() => { t.style.display = 'none'; }, ms);
+  }
+
+  /* ---------- 畫面 ---------- */
+  function render() {
+    if (view === 'home') renderHome();
+    else if (S && S.status === 'lobby') renderLobby();
+    else if (S) renderGame();
+  }
+  function dieHTML(v, cls = '') {
+    if (!v) return `<div class="die blank ${cls}"></div>`;
+    const pos = {1: [5], 2: [3, 7], 3: [3, 5, 7], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9]}[v];
+    return `<div class="die ${cls}" aria-label="骰子 ${v}">${pos.map(p => `<span class="pip" style="grid-row:${Math.ceil(p / 3)};grid-column:${((p - 1) % 3) + 1}"></span>`).join('')}</div>`;
+  }
+
+  function renderHome() {
+    const app = $('#app');
+    if (!app.querySelector('.home')) {
+      app.innerHTML = `
+      <div class="home">
+        <div class="hero">
+          <div class="dicehero">${dieHTML(3)}${dieHTML(5)}</div>
+          <h1>骰子街 線上桌</h1>
+          <p>Machi Koro 基本版＋港灣擴充＋富豪街擴充，2–5 人即時連線。建一個房間，把房號告訴朋友就能開局。</p>
+          <div class="btn-row" style="margin-top:12px"><button class="btn ghost" data-act="rules">看規則與卡表</button></div>
+        </div>
+        <div id="homeStatus"></div>
+        <div class="panel">
+          <h2>你的暱稱</h2>
+          <input class="input" id="nameInput" maxlength="12" placeholder="例如：Sean" value="${esc(myName)}">
+        </div>
+        <div class="grid2">
+          <div class="panel">
+            <h2>建立房間</h2>
+            <label class="check"><input type="checkbox" id="optHarbor" checked><span><b>港灣擴充</b><br><span class="small muted">市政廳、港口、機場、漁船與壽司店等，地標增為 6 座</span></span></label>
+            <label class="check"><input type="checkbox" id="optMr" checked><span><b>富豪街擴充</b><br><span class="small muted">整修機制、拆除／搬家／貸款公司、公園、科技新創等</span></span></label>
+            <label class="check" style="display:block"><span class="small muted">市場方式</span>
+              <select class="input" id="optMarket" style="margin-top:4px">
+                <option value="ten">10 疊隨機市場（擴充建議）</option>
+                <option value="all">全部攤開（基本版原始規則）</option>
+              </select></label>
+            <div class="btn-row" style="margin-top:8px"><button class="btn big" data-act="create">建立房間</button></div>
+            <div id="homeExtra"></div>
+          </div>
+          <div class="panel">
+            <h2>加入房間</h2>
+            <input class="input" id="codeInput" maxlength="4" placeholder="輸入 4 碼房號" style="text-transform:uppercase;letter-spacing:.2em;font-family:var(--font-display);font-size:20px">
+            <div class="btn-row" style="margin-top:10px"><button class="btn big" data-act="join">加入</button></div>
+            ${NET.hasRoomList ? '<h2 style="margin-top:18px">進行中的房間</h2><div class="roomlist" id="roomList"></div>' : ''}
+          </div>
+        </div>
+        <div class="panel small muted">${NET.homeNoteHTML()}</div>
+      </div>`;
+      app.querySelector('#nameInput').addEventListener('input', e => { myName = e.target.value; ls.set('mk_name', myName); });
+      app.querySelector('#codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') NET.joinRoom(e.target.value); });
+      try { const h = (location.hash || '').replace('#', '').toUpperCase(); if (/^[A-Z]{4}$/.test(h)) app.querySelector('#codeInput').value = h; } catch (e) {}
+    }
+    $('#homeStatus').innerHTML = NET.homeStatusHTML();
+    $('#homeExtra').innerHTML = NET.homeExtraHTML ? NET.homeExtraHTML() : '';
+    renderRoomList();
+  }
+  function renderRoomList() {
+    const el = $('#roomList'); if (!el || !NET.hasRoomList) return;
+    const rooms = NET.rooms();
+    if (!rooms.length) { el.innerHTML = `<div class="small muted">目前沒有開放的房間。建一個吧！</div>`; return; }
+    el.innerHTML = rooms.map(r => {
+      const mine = r.players.some(p => p.uid === uid);
+      const label = r.status === 'lobby' ? (mine ? '回到房間' : '加入') : (mine ? '回到牌局' : '觀戰');
+      const sets = [r.settings.harbor ? '港灣' : null, r.settings.mr ? '富豪街' : null].filter(Boolean).join('＋') || '基本版';
+      return `<button class="roomrow" data-act="joinCode" data-code="${esc(r.code)}">
+        <span><span class="rc">${esc(r.code)}</span> <span class="rn">${r.status === 'lobby' ? '等待中' : '進行中'} · ${sets} · ${r.players.length}/5 人</span><br><span class="rn">${esc(r.players.map(p => p.name).join('、'))}</span></span>
+        <span class="btn soft" style="padding:6px 12px">${label}</span></button>`;
+    }).join('');
+  }
+
+  function topHTML() {
+    const inPlay = S.status !== 'lobby' ? E.landmarksInPlay(S) : [];
+    const conn = NET.connStatusHTML ? NET.connStatusHTML() : '';
+    return `<header class="top">
+      <div class="brand">骰子街 <span class="sub">線上桌</span></div>
+      <div class="code">房號 <b>${esc(S.code)}</b></div>
+      ${conn}
+      <div class="spacer"></div>
+      <div class="btn-row">
+        <button class="btn ghost" data-act="rules">規則與卡表</button>
+        ${isHost() && S.status === 'playing' ? `<button class="btn ghost" data-act="forceSkip" title="當輪到的人離線時使用">強制跳過回合</button>` : ''}
+        <button class="btn ghost" data-act="leave">${isHost() && NET.hostOwnsRoom ? '關閉房間' : (S.status === 'lobby' && me() ? '離開房間' : '回到大廳')}</button>
+      </div>
+      ${S.status !== 'lobby' ? `<div class="players">${S.players.map((p, i) => `
+        <div class="pchip ${S.turn && S.turn.pi === i && S.status === 'playing' ? 'active' : ''}">
+          <div class="pname">${esc(p.name)} ${p.uid === uid ? '<span class="you">你</span>' : ''} ${p.uid === S.hostUid ? '<span class="host">房主</span>' : ''}</div>
+          <div class="coins">${p.coins}</div>
+          <div class="lmdots">${inPlay.map(l => `<i class="${p.lm[l.key] ? 'on' : ''}" title="${esc(l.zh)}"></i>`).join('')}</div>
+        </div>`).join('')}</div>` : ''}
+    </header>`;
+  }
+
+  function renderLobby() {
+    const app = $('#app');
+    const seats = []; for (let i = 0; i < 5; i++) seats.push(S.players[i] || null);
+    const host = isHost();
+    app.innerHTML = `${topHTML()}
+    <div class="lobby">
+      <div class="panel">
+        <h2>玩家（${S.players.length}/5）</h2>
+        ${seats.map((p, i) => `<div class="seat"><span class="no">${i + 1}</span>${p ? `<b>${esc(p.name)}</b>${p.uid === uid ? ' <span class="you small" style="color:var(--accent)">（你）</span>' : ''}${p.uid === S.hostUid ? ' <span class="small muted">房主</span>' : ''}` : `<span class="empty">空位 — 把房號 <b>${esc(S.code)}</b> 告訴朋友</span>`}</div>`).join('')}
+      </div>
+      <div class="panel">
+        <h2>設定 <span class="tag">${host ? '房主可以調整' : '由房主設定'}</span></h2>
+        <label class="check"><input type="checkbox" data-act="setting" data-key="harbor" ${S.settings.harbor ? 'checked' : ''} ${host ? '' : 'disabled'}><span><b>港灣擴充</b> <span class="small muted">— 市政廳＋港口＋機場，地標 6 座才獲勝</span></span></label>
+        <label class="check"><input type="checkbox" data-act="setting" data-key="mr" ${S.settings.mr ? 'checked' : ''} ${host ? '' : 'disabled'}><span><b>富豪街擴充</b> <span class="small muted">— 整修機制與各種公司</span></span></label>
+        <label class="check"><input type="checkbox" data-act="setting" data-key="market" ${S.settings.market === 'ten' ? 'checked' : ''} ${host ? '' : 'disabled'}><span><b>10 疊隨機市場</b> <span class="small muted">— 關閉則全部建築攤開供購買</span></span></label>
+        <div class="btn-row" style="margin-top:12px">
+          ${host ? `<button class="btn big" data-act="start" ${S.players.length < 2 ? 'disabled' : ''}>開始遊戲${S.players.length < 2 ? '（至少 2 人）' : ''}</button>` : `<div class="hint">等待房主 ${esc(S.players.find(p => p.uid === S.hostUid)?.name || '')} 開始遊戲…</div>`}
+          ${!me() && S.players.length < 5 ? `<button class="btn soft" data-act="joinHere">加入這個房間</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function renderGame() {
+    const app = $('#app');
+    if (!app.querySelector('#board')) {
+      app.innerHTML = `<div id="top"></div><main class="board" id="board">
+        <section class="panel" id="turnPanel"></section>
+        <section class="panel" id="marketPanel"></section>
+        <section class="panel" id="citiesPanel"></section>
+        <aside class="panel" id="logPanel"></aside></main>`;
+    }
+    if (!S.pending) { ui.biz = null; ui.move = null; }
+    $('#top').innerHTML = topHTML();
+    $('#turnPanel').innerHTML = turnHTML();
+    $('#marketPanel').innerHTML = marketHTML();
+    $('#citiesPanel').innerHTML = citiesHTML();
+    const logEl = $('#logPanel');
+    const wasBottom = !logEl.querySelector('.log') || (() => { const l = logEl.querySelector('.log'); return l.scrollHeight - l.scrollTop - l.clientHeight < 40; })();
+    logEl.innerHTML = logHTML();
+    if (wasBottom) { const l = logEl.querySelector('.log'); if (l) l.scrollTop = l.scrollHeight; }
+  }
+
+  function cardHTML(card, opts = {}) {
+    const cls = ['card', card.color, opts.buyable ? 'buyable' : '', opts.dim ? 'dim' : ''].join(' ');
+    const n = card.nums.length > 1 ? `${card.nums[0]}<br>–<br>${card.nums[card.nums.length - 1]}` : card.nums[0];
+    const inner = `<div class="band"><span class="n">${n}</span><span class="ic">${ICONS[card.icon].e}</span></div>
+      <div class="body">
+        <div class="name"><span>${esc(card.zh)}</span>${opts.count != null ? `<span class="cnt">×${opts.count}</span>` : ''}</div>
+        <div class="desc">${esc(card.desc)}</div>
+        <div class="cost"><span class="coins">${card.cost}</span><span class="set">${COLOR_ZH[card.color]} · ${COLOR_WHEN[card.color]}${card.set !== 'base' ? ' · ' + SET_ZH[card.set] : ''}</span></div>
+      </div>
+      ${opts.closed ? `<div class="closed"><span>整修中 ×${opts.closed}</span></div>` : ''}`;
+    if (opts.buyable) return `<button class="${cls}" data-act="buyCard" data-id="${card.id}" title="建造 ${esc(card.zh)}">${inner}</button>`;
+    return `<div class="${cls}">${inner}</div>`;
+  }
+  function marketHTML() {
+    const up = S.market.up, ids = Object.keys(up).sort((a, b) => CARD_BY_ID[a].nums[0] - CARD_BY_ID[b].nums[0] || CARD_BY_ID[a].cost - CARD_BY_ID[b].cost);
+    const canBuy = isMyTurn() && S.turn.step === 'build' && !S.turn.built;
+    const deckN = S.market.deck.length;
+    return `<h2>市場 <span class="tag">${S.settings.market === 'ten' ? `10 疊隨機市場 · 牌庫剩 ${deckN} 張` : '全部攤開'}${canBuy ? ' · 點卡片建造' : ''}</span></h2>
+      <div class="cgrid">${ids.map(id => cardHTML(CARD_BY_ID[id], {count: up[id], buyable: canBuy && E.canBuyCard(S, id), dim: canBuy && !E.canBuyCard(S, id)})).join('')}</div>
+      ${ids.length ? '' : '<div class="hint">市場已經空了。</div>'}`;
+  }
+  function landmarksHTML(p, mine) {
+    const canBuy = mine && isMyTurn() && S.turn.step === 'build' && !S.turn.built;
+    const chips = E.landmarksInPlay(S).map(l => {
+      const buyable = canBuy && E.canBuyLandmark(S, l.key);
+      const cls = `lm ${p.lm[l.key] ? 'built' : ''} ${buyable ? 'buyable' : ''}`;
+      const inner = `<span class="ln">${p.lm[l.key] ? '✓ ' : ''}${esc(l.zh)}</span><span class="coins">${l.cost}</span><span class="ld">${esc(l.desc)}</span>`;
+      return buyable ? `<button class="${cls}" data-act="buyLm" data-key="${l.key}">${inner}</button>` : `<div class="${cls}">${inner}</div>`;
+    });
+    if (S.settings.harbor) chips.push(`<div class="lm built"><span class="ln">✓ 市政廳</span><span class="small muted">起始</span><span class="ld">${esc(CITY_HALL.desc)}</span></div>`);
+    return `<div class="lmrow">${chips.join('')}</div>`;
+  }
+  function cityHTML(p) {
+    const mine = p.uid === uid;
+    const ids = Object.keys(p.est).sort((a, b) => CARD_BY_ID[a].nums[0] - CARD_BY_ID[b].nums[0]);
+    const open = mine || ui.openCities.has(p.uid);
+    return `<details class="city" data-uid="${esc(p.uid)}" ${open ? 'open' : ''}>
+      <summary>${esc(p.name)}${mine ? ' <span class="you" style="font-size:11px;padding:1px 6px;border-radius:999px;background:var(--accent-soft);color:var(--accent)">你的城市</span>' : ''}
+        <span class="stat"><span class="coins">${p.coins}</span> · 地標 ${E.lmCount(p)}/${E.landmarksInPlay(S).length} · 建築 ${Object.values(p.est).reduce((a, b) => a + b, 0)} 張${p.tech ? ` · 科技新創投資 ${p.tech} 元` : ''}</span></summary>
+      <div class="inner">
+        ${landmarksHTML(p, mine)}
+        <div class="cgrid compact">${ids.map(id => cardHTML(CARD_BY_ID[id], {count: p.est[id], closed: p.closed[id] || 0})).join('')}</div>
+      </div></details>`;
+  }
+  function citiesHTML() {
+    const order = [...S.players.keys()].sort((a, b) => (S.players[a].uid === uid ? -1 : 0) - (S.players[b].uid === uid ? -1 : 0));
+    return `<h2>城市 <span class="tag">點名字展開</span></h2>${order.map(i => cityHTML(S.players[i])).join('')}`;
+  }
+  function logHTML() {
+    return `<h2>紀錄</h2><div class="log">${S.log.map(l => `<div class="l ${esc(l.c)}">${esc(l.t)}</div>`).join('')}</div>`;
+  }
+
+  /* ---------- 回合面板 ---------- */
+  function turnHTML() {
+    const t = S.turn, a = S.players[t.pi], mine = isMyTurn();
+    const diceKey = t.dice.join('-') + '/' + (t.rerolled ? 'r' : '') + S.round + t.pi;
+    if (diceKey !== ui.lastDiceKey) { ui.lastDiceKey = diceKey; ui.diceChangedAt = Date.now(); }
+    const rolling = t.dice.length && (Date.now() - ui.diceChangedAt) < 600;
+    const dice = t.dice.length ? t.dice.map(v => dieHTML(v, rolling ? 'rolling' : '')).join('') : dieHTML(0) + (a.lm.station ? dieHTML(0) : '');
+    const total = t.dice.length ? `<div class="total">${t.total}${t.harborUsed ? `<small>港口 +2（原本 ${t.raw}）</small>` : t.doubles ? '<small>雙骰同點</small>' : ''}</div>` : '';
+    let body = '';
+    if (S.status === 'ended') {
+      const w = S.players[S.winner];
+      body = `<div class="winbox"><div class="big">🎉 ${esc(w.name)} 獲勝！</div><p class="muted">蓋完了所有地標。</p></div>
+        <div class="btn-row" style="justify-content:center">${isHost() ? `<button class="btn big" data-act="rematch">再來一局</button>` : '<div class="hint">等待房主開新的一局…</div>'}</div>`;
+      return `<div class="turnhead"><span class="who">遊戲結束</span><span class="round">第 ${S.round} 輪</span></div>${body}${ledgerHTML()}`;
+    }
+    if (t.step === 'roll') {
+      body = mine ? `<div class="btn-row" style="justify-content:center">
+          <button class="btn big" data-act="roll" data-n="1">擲 1 顆骰</button>
+          <button class="btn big ${a.lm.station ? '' : 'ghost'}" data-act="roll" data-n="2" ${a.lm.station ? '' : 'disabled title="需要先蓋火車站"'}>擲 2 顆骰</button>
+        </div>${a.lm.station ? '' : '<p class="small muted" style="text-align:center;margin-top:6px">蓋了火車站才能擲 2 顆。</p>'}`
+        : `<div class="hint">等待 ${esc(a.name)} 擲骰…</div>`;
+    } else if (t.step === 'rolled') {
+      if (mine) {
+        const parts = [];
+        if (a.lm.tower && !t.rerolled) parts.push(`<button class="btn ghost" data-act="reroll">廣播塔：重骰一次</button>`);
+        if (E.canHarbor(S)) parts.push(`<button class="btn ghost ${t.harborUsed ? 'on' : ''}" data-act="harbor">${t.harborUsed ? '✓ 已用港口 +2' : '港口：總和 +2'}</button>`);
+        body = `<div class="btn-row" style="justify-content:center">${parts.join('')}<button class="btn big" data-act="confirm">結算收入（${t.total}）</button></div>`;
+      } else body = `<div class="hint">${esc(a.name)} 擲出 ${t.total}${a.lm.tower && !t.rerolled ? '，可能會重骰' : ''}…</div>`;
+    } else if (t.step === 'income') {
+      body = pendingHTML(mine, a);
+    } else if (t.step === 'build') {
+      if (mine) {
+        const btns = [];
+        if (E.canInvest(S)) btns.push(`<button class="btn gold" data-act="invest">投資科技新創 1 元</button>`);
+        btns.push(`<button class="btn ${t.built ? '' : 'ghost'}" data-act="endTurn">${t.built ? '結束回合' : (a.lm.airport ? '不建造，領機場 10 元' : '不建造，結束回合')}</button>`);
+        body = `<div class="hint">你有 <b>${a.coins}</b> 元。${t.built ? '這回合已經建造完成。' : '點「市場」裡亮起的卡片，或「你的城市」裡的地標來建造（只能買一樣）。'}</div>
+          <div class="btn-row" style="justify-content:center;margin-top:10px">${btns.join('')}</div>`;
+      } else body = `<div class="hint">${esc(a.name)} 正在建造…（${a.coins} 元）</div>`;
+    }
+    return `<div class="turnhead"><span class="who">${mine ? '輪到你' : '輪到 ' + esc(a.name)}</span><span class="round">第 ${S.round} 輪</span></div>
+      <div class="dice">${dice}</div>${total}${body}${ledgerHTML()}`;
+  }
+  function ledgerHTML() {
+    const t = S.turn; if (!t) return '';
+    const rows = S.log.filter(l => l.n > t.logFrom);
+    if (!rows.length) return '';
+    return `<div class="ledger">${rows.map(l => `<div class="l ${esc(l.c)}">${esc(l.t)}</div>`).join('')}</div>`;
+  }
+
+  const PENDING_ZH = {purpleOrder: '決定紫色建築的發動順序', tv: '選擇電視台的收錢對象', business: '決定商業中心要交換哪張建築', renovation: '選擇裝修公司要關閉哪種建築', exhibit: '決定展覽館要改發動哪張建築', demolition: '選擇拆除公司要拆哪座地標', moving: '決定搬家公司要送出哪張建築'};
+  function pendingHTML(mine, a) {
+    const pd = S.pending;
+    if (!pd) return `<div class="hint">結算中…</div>`;
+    if (!mine) return `<div class="hint">等待 ${esc(a.name)} ${PENDING_ZH[pd.k] || '做決定'}…</div>`;
+    const opps = S.players.map((p, i) => ({p, i})).filter(x => x.i !== S.turn.pi);
+    const nonPurple = p => Object.keys(p.est).filter(id => CARD_BY_ID[id].color !== 'purple');
+    const choiceBtn = (label, sub, data, on) => `<button class="choice ${on ? 'on' : ''}" data-act="${data.act || 'decide'}" data-json="${attr(data)}"><span class="cn">${label}</span><span class="cs">${sub || ''}</span></button>`;
+    switch (pd.k) {
+      case 'purpleOrder':
+        return `<div class="decide"><h3>骰出 ${S.turn.total}：先發動哪一張？</h3>${pd.ids.map(id => choiceBtn(CARD_BY_ID[id].zh, CARD_BY_ID[id].desc, {id})).join('')}</div>`;
+      case 'tv':
+        return `<div class="decide"><h3>電視台：向誰收 5 元？</h3>${opps.map(x => choiceBtn(x.p.name, `${x.p.coins} 元`, {pid: x.i})).join('')}</div>`;
+      case 'business': {
+        const mineIds = nonPurple(a);
+        if (!ui.biz) return `<div class="decide"><h3>商業中心：先選你要交出去的建築</h3>${mineIds.map(id => choiceBtn(CARD_BY_ID[id].zh, `你有 ${a.est[id]} 張`, {act: 'bizMine', id})).join('')}${choiceBtn('不交換', '', {skip: true})}</div>`;
+        const list = [];
+        opps.forEach(x => nonPurple(x.p).forEach(id => list.push(choiceBtn(`${x.p.name} 的 ${CARD_BY_ID[id].zh}`, `${CARD_BY_ID[id].desc}（${x.p.est[id]} 張）`, {mine: ui.biz, pid: x.i, theirs: id}))));
+        return `<div class="decide"><h3>用 ${CARD_BY_ID[ui.biz].zh} 換對方的哪一張？</h3>${list.join('')}${choiceBtn('重新選擇', '', {act: 'bizReset'})}${choiceBtn('不交換', '', {skip: true})}</div>`;
+      }
+      case 'renovation': {
+        const types = {}; S.players.forEach(p => Object.keys(p.est).forEach(id => { if (CARD_BY_ID[id].color !== 'purple') (types[id] = types[id] || []).push(`${p.name}${p.est[id] > 1 ? '×' + p.est[id] : ''}`); }));
+        const ids = Object.keys(types).sort((x, y) => CARD_BY_ID[x].nums[0] - CARD_BY_ID[y].nums[0]);
+        return `<div class="decide"><h3>裝修公司：關閉哪一種建築？</h3><p class="small muted">所有人的該建築都會關閉整修；對手每張付你 1 元。</p>${ids.map(id => choiceBtn(CARD_BY_ID[id].zh, types[id].join('、'), {id})).join('')}</div>`;
+      }
+      case 'exhibit': {
+        const ids = Object.keys(a.est).filter(id => ['blue', 'green'].includes(CARD_BY_ID[id].color)).sort((x, y) => CARD_BY_ID[x].nums[0] - CARD_BY_ID[y].nums[0]);
+        return `<div class="decide"><h3>展覽館：改為發動哪一張？</h3><p class="small muted">發動後展覽館會退回供應區。</p>${ids.map(id => choiceBtn(CARD_BY_ID[id].zh, `${CARD_BY_ID[id].desc}（${a.est[id]} 張${a.closed[id] ? '，整修中 ' + a.closed[id] : ''}）`, {id})).join('')}${choiceBtn('不發動，保留展覽館', '', {skip: true})}</div>`;
+      }
+      case 'demolition': {
+        const keys = E.landmarksInPlay(S).filter(l => a.lm[l.key]);
+        return `<div class="decide"><h3>拆除公司：必須拆除一座地標（拿 8 元）</h3>${keys.map(l => choiceBtn(l.zh, `重建需要 ${l.cost} 元`, {key: l.key})).join('')}</div>`;
+      }
+      case 'moving': {
+        const mineIds = nonPurple(a);
+        if (!ui.move) return `<div class="decide"><h3>搬家公司：必須送出一張建築（拿 4 元）</h3>${mineIds.map(id => choiceBtn(CARD_BY_ID[id].zh, `你有 ${a.est[id]} 張`, {act: 'moveMine', id})).join('')}</div>`;
+        return `<div class="decide"><h3>把 ${CARD_BY_ID[ui.move].zh} 送給誰？</h3>${opps.map(x => choiceBtn(x.p.name, `${x.p.coins} 元`, {id: ui.move, pid: x.i})).join('')}${choiceBtn('重新選擇', '', {act: 'moveReset'})}</div>`;
+      }
+    }
+    return '';
+  }
+
+  /* ---------- 規則對話框 ---------- */
+  function rulesHTML() {
+    const sets = S ? S.settings : {harbor: true, mr: true};
+    const list = txt => `<ul>${txt.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
+    const rows = CARDS.map(c => `<tr><td><span class="sw ${c.color}"></span>${esc(c.zh)}<br><span class="small muted">${esc(c.en)}</span></td><td class="num">${c.nums.length > 1 ? c.nums[0] + '–' + c.nums[c.nums.length - 1] : c.nums[0]}</td><td class="num">${c.cost}</td><td>${ICONS[c.icon].e} ${ICONS[c.icon].zh}</td><td>${esc(c.desc)}<br><span class="small muted">${COLOR_WHEN[c.color]}</span></td><td class="small muted">${SET_ZH[c.set]}</td></tr>`).join('');
+    const lrows = LANDMARKS.map(l => `<tr><td>${esc(l.zh)}<br><span class="small muted">${esc(l.en)}</span></td><td class="num">—</td><td class="num">${l.cost}</td><td>地標</td><td>${esc(l.desc)}</td><td class="small muted">${SET_ZH[l.set]}</td></tr>`).join('') +
+      `<tr><td>市政廳<br><span class="small muted">City Hall</span></td><td class="num">—</td><td class="num">0</td><td>起始卡</td><td>${esc(CITY_HALL.desc)}</td><td class="small muted">港灣擴充</td></tr>`;
+    return `<div class="close"><button class="btn ghost" data-act="closeRules">關閉</button></div>
+      <h2>骰子街 規則速查</h2>
+      <h3>回合流程與基本規則</h3>${list(RULES_TEXT.flow)}
+      <h3>購物中心加成</h3><p>${esc(RULES_TEXT.shopping)}</p>
+      <h3>港灣擴充${sets.harbor ? '（本局使用）' : ''}</h3>${list(RULES_TEXT.harbor)}
+      <h3>富豪街擴充${sets.mr ? '（本局使用）' : ''}</h3>${list(RULES_TEXT.mr)}
+      <h3>地標</h3><div class="tablewrap"><table class="ctable"><thead><tr><th>名稱</th><th>號碼</th><th>費用</th><th>類型</th><th>效果</th><th>來源</th></tr></thead><tbody>${lrows}</tbody></table></div>
+      <h3>建築卡（依號碼排序）</h3><div class="tablewrap"><table class="ctable"><thead><tr><th>名稱</th><th>號碼</th><th>費用</th><th>圖示</th><th>效果</th><th>來源</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <p class="small muted">卡片中文名稱為本站翻譯，可能與實體中文版略有差異。壽司店採日版費用 2 元。</p>`;
+  }
+
+  /* ---------- 事件 ---------- */
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-act]'); if (!el) return;
+    const a = el.dataset.act;
+    const needTurn = () => { if (!isMyTurn()) { toast('還沒輪到你'); return false; } return true; };
+    const send = (...args) => NET.send(...args);
+    switch (a) {
+      case 'create': NET.createRoom({harbor: $('#optHarbor').checked, mr: $('#optMr').checked, market: $('#optMarket').value}); break;
+      case 'join': NET.joinRoom($('#codeInput').value); break;
+      case 'joinCode': NET.joinFromList(el.dataset.code); break;
+      case 'joinHere': NET.joinRoom(S.code); break;
+      case 'resume': NET.resume && NET.resume(); break;
+      case 'leave': NET.leave(); break;
+      case 'rules': $('#rulesBody').innerHTML = rulesHTML(); $('#rulesDlg').showModal(); break;
+      case 'closeRules': $('#rulesDlg').close(); break;
+      case 'start': if (isHost()) send('start'); break;
+      case 'rematch': if (isHost()) send('rematch'); break;
+      case 'forceSkip': if (isHost() && confirm(`要強制結束 ${pname(S.turn.pi)} 的回合嗎？`)) send('forceSkip'); break;
+      case 'roll': if (needTurn()) send('roll', +el.dataset.n); break;
+      case 'reroll': if (needTurn()) send('reroll'); break;
+      case 'harbor': if (needTurn()) send('setHarbor', !S.turn.harborUsed); break;
+      case 'confirm': if (needTurn()) { ui.biz = null; ui.move = null; send('confirmRoll'); } break;
+      case 'decide': if (needTurn()) { const c = JSON.parse(el.dataset.json); ui.biz = null; ui.move = null; send('decide', c); } break;
+      case 'bizMine': ui.biz = JSON.parse(el.dataset.json).id; render(); break;
+      case 'bizReset': ui.biz = null; render(); break;
+      case 'moveMine': ui.move = JSON.parse(el.dataset.json).id; render(); break;
+      case 'moveReset': ui.move = null; render(); break;
+      case 'buyCard': if (needTurn()) send('buyCard', el.dataset.id); break;
+      case 'buyLm': if (needTurn()) send('buyLandmark', el.dataset.key); break;
+      case 'invest': if (needTurn()) send('invest'); break;
+      case 'endTurn': if (needTurn()) send('endTurn'); break;
+    }
+  });
+  document.addEventListener('change', e => {
+    const el = e.target.closest('[data-act="setting"]'); if (!el || !isHost()) return;
+    NET.send('setting', el.dataset.key, el.checked);
+  });
+  document.addEventListener('toggle', e => {
+    const d = e.target; if (!(d instanceof HTMLDetailsElement) || !d.classList.contains('city')) return;
+    if (d.open) ui.openCities.add(d.dataset.uid); else ui.openCities.delete(d.dataset.uid);
+  }, true);
+  $('#rulesDlg').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+
+  const api = {
+    get S() { return S; }, get uid() { return uid; }, get view() { return view; },
+    setState(s) { S = s; }, setUid(u) { uid = u; }, setView(v) { view = v; if (v === 'home') { const app = $('#app'); if (app && !app.querySelector('.home')) app.innerHTML = ''; } },
+    render, renderRoomList, toast, name: () => myName.trim(), ls, isHost, me,
+  };
+  setTimeout(() => NET.init(), 0);
+  return api;
+})();
+</script>
+</body>
+</html>
