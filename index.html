@@ -162,6 +162,15 @@ select.input { appearance: auto; }
 .ledger .l.buy, .ledger .l.win { border-color: var(--gold); } .ledger .l.roll { border-color: var(--ink); }
 .ledger .l.muted { color: var(--ink3); }
 
+details.prev { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 8px; }
+details.prev summary { list-style: none; cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 13.5px; }
+details.prev summary::-webkit-details-marker { display: none; }
+details.prev summary .pv { font-weight: 700; color: var(--ink2); }
+details.prev summary .pv::before { content: "▸ "; color: var(--ink3); }
+details.prev[open] summary .pv::before { content: "▾ "; }
+details.prev summary .pd { color: var(--ink); }
+details.prev .ledger { margin-top: 6px; border-top: 0; padding-top: 0; opacity: .85; }
+
 /* ---- decisions ---- */
 .decide { display: grid; gap: 8px; margin-top: 10px; }
 .decide h3 { font-size: 15px; }
@@ -493,7 +502,9 @@ const E = (() => {
     return true;
   }
   function newTurn(s, pi) {
-    s.turn = {pi, step: 'roll', dice: [], raw: 0, total: 0, rerolled: false, harborUsed: false, doubles: false, built: false, invested: false, logFrom: s.logN || 0};
+    const prev = s.turn;
+    s.turn = {pi, step: 'roll', dice: [], raw: 0, total: 0, rerolled: false, harborUsed: false, doubles: false, built: false, invested: false,
+      logFrom: s.logN || 0, prevFrom: prev ? prev.logFrom : 0, prevPi: prev ? prev.pi : null};
   }
   function rematch(s) {
     if (s.status !== 'ended') return false;
@@ -812,7 +823,7 @@ const E = (() => {
   function buyCard(s, id) {
     if (!canBuyCard(s, id)) return false;
     const a = A(s), card = CARD_BY_ID[id];
-    a.coins -= card.cost; addEst(a, id); marketTake(s, id); s.turn.built = true;
+    a.coins -= card.cost; addEst(a, id); marketTake(s, id); s.turn.built = true; s.turn.builtName = card.zh;
     log(s, `${name(a)} 花 ${card.cost} 元建造了 ${card.zh}`, 'buy');
     if (card.effect.kind === 'loan') { a.coins += 5; log(s, `貸款公司：${name(a)} 從銀行拿了 5 元`, 'green'); }
     afterBuild(s); return true;
@@ -820,7 +831,7 @@ const E = (() => {
   function buyLandmark(s, key) {
     if (!canBuyLandmark(s, key)) return false;
     const a = A(s), l = LM_BY_KEY[key];
-    a.coins -= l.cost; a.lm[key] = true; s.turn.built = true;
+    a.coins -= l.cost; a.lm[key] = true; s.turn.built = true; s.turn.builtName = '地標「' + l.zh + '」';
     log(s, `${name(a)} 花 ${l.cost} 元建造了地標「${l.zh}」`, 'buy');
     if (allBuilt(s, a)) { s.status = 'ended'; s.winner = s.turn.pi; log(s, `🎉 ${name(a)} 蓋完所有地標，獲得勝利！`, 'win'); return true; }
     afterBuild(s); return true;
@@ -843,7 +854,13 @@ const E = (() => {
     nextTurn(s, t.doubles && a.lm.amuse);
     return true;
   }
+  function summarize(s, extra, forced) {
+    const t = s.turn, a = A(s);
+    s.lastTurn = {pi: t.pi, dice: t.dice.slice(), total: t.total, builtName: t.builtName || null, invested: !!t.invested,
+      airport: !t.built && !!a.lm.airport, extra: !!extra, forced: !!forced};
+  }
   function nextTurn(s, extra) {
+    summarize(s, extra, false);
     const L = P(s).length;
     if (extra) { log(s, `${name(A(s))} 擲出雙骰同點，遊樂園再給一回合！`, 'sys'); newTurn(s, s.turn.pi); }
     else { const ni = (s.turn.pi + 1) % L; if (ni === 0) s.round += 1; newTurn(s, ni); }
@@ -851,7 +868,7 @@ const E = (() => {
   function forceSkip(s) { // 主持人強制結束目前回合
     if (s.status !== 'playing') return false;
     log(s, `主持人強制結束了 ${name(A(s))} 的回合`, 'sys');
-    s.queue = []; s.pending = null;
+    s.queue = []; s.pending = null; summarize(s, false, true);
     const L = P(s).length, ni = (s.turn.pi + 1) % L; if (ni === 0) s.round += 1; newTurn(s, ni);
     return true;
   }
@@ -1120,8 +1137,81 @@ const APP = (() => {
     t.textContent = msg; t.style.display = 'block'; clearTimeout(t._tm); t._tm = setTimeout(() => { t.style.display = 'none'; }, ms);
   }
 
+
+  /* ---------- 音效（Web Audio 合成，不需要音檔） ---------- */
+  const SFX = (() => {
+    let ctx = null, muted = ls.get('mk_mute', '0') === '1';
+    function ensure() {
+      if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ctx = null; } }
+      if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} }
+      return ctx;
+    }
+    function tone(freq, at, dur, type, gain, slideTo) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type || 'sine'; o.frequency.setValueAtTime(freq, at);
+      if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, at + dur);
+      g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(gain || 0.15, at + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+      o.connect(g).connect(ctx.destination); o.start(at); o.stop(at + dur + 0.05);
+    }
+    function noise(at, dur, gain, freq) {
+      const len = Math.max(1, Math.floor(ctx.sampleRate * dur)), buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+      const src = ctx.createBufferSource(); src.buffer = buf;
+      const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq || 1800; f.Q.value = 0.9;
+      const g = ctx.createGain(); g.gain.value = gain || 0.15;
+      src.connect(f).connect(g).connect(ctx.destination); src.start(at);
+    }
+    const fx = {
+      click: n => tone(1200, n, 0.035, 'square', 0.03),
+      dice: n => { for (let i = 0; i < 7; i++) noise(n + i * 0.055 + Math.random() * 0.02, 0.045, 0.22 - i * 0.02, 1500 + Math.random() * 1500); tone(170, n + 0.42, 0.12, 'triangle', 0.18, 90); },
+      coin: n => { tone(1046, n, 0.1, 'triangle', 0.16); tone(1568, n + 0.07, 0.22, 'triangle', 0.14); },
+      pay: n => { tone(300, n, 0.18, 'sawtooth', 0.06, 180); },
+      build: n => { noise(n, 0.07, 0.25, 700); tone(523, n + 0.06, 0.18, 'triangle', 0.14); tone(659, n + 0.14, 0.18, 'triangle', 0.14); tone(784, n + 0.22, 0.3, 'triangle', 0.14); },
+      turn: n => { tone(784, n, 0.16, 'sine', 0.2); tone(1175, n + 0.16, 0.32, 'sine', 0.2); },
+      win: n => { [523, 659, 784, 1046].forEach((f, i) => tone(f, n + i * 0.13, 0.3, 'triangle', 0.18)); tone(1318, n + 0.52, 0.7, 'triangle', 0.2); },
+      lose: n => { tone(440, n, 0.25, 'triangle', 0.14); tone(349, n + 0.25, 0.45, 'triangle', 0.14); },
+    };
+    return {
+      play(name) {
+        if (muted || !fx[name]) return;
+        const c = ensure(); if (!c || c.state !== 'running') return;
+        try { fx[name](c.currentTime + 0.01); } catch (e) {}
+        if (name === 'turn' && navigator.vibrate) { try { navigator.vibrate([120, 60, 120]); } catch (e) {} }
+      },
+      unlock: ensure,
+      toggle() { muted = !muted; ls.set('mk_mute', muted ? '1' : '0'); if (!muted) { ensure(); this.play('click'); } return muted; },
+      get muted() { return muted; },
+    };
+  })();
+
+  /* 狀態變化 → 音效 */
+  let seen = null;
+  function detectEvents() {
+    if (!S) { seen = null; return; }
+    const my = me(), t = S.turn;
+    const cur = {
+      code: S.code, seq: S.seq, status: S.status, logN: S.logN || 0,
+      diceKey: t ? t.dice.join('-') + '/' + (t.rerolled ? 'r' : '') + S.round + t.pi : '',
+      myCoins: my ? my.coins : null, activeUid: t && S.status === 'playing' ? S.players[t.pi].uid : null,
+      logFrom: t ? t.logFrom : 0, winner: S.winner,
+    };
+    if (seen && seen.code === cur.code && cur.seq !== seen.seq) {
+      const newLogs = S.log.filter(l => l.n > seen.logN);
+      if (cur.status === 'ended' && seen.status !== 'ended') SFX.play(my && S.players[S.winner].uid === uid ? 'win' : 'lose');
+      else {
+        if (cur.diceKey !== seen.diceKey && t && t.dice.length) SFX.play('dice');
+        else if (newLogs.some(l => l.c === 'buy')) SFX.play('build');
+        else if (cur.myCoins != null && seen.myCoins != null && cur.myCoins > seen.myCoins) SFX.play('coin');
+        else if (cur.myCoins != null && seen.myCoins != null && cur.myCoins < seen.myCoins) SFX.play('pay');
+        if (cur.activeUid === uid && (seen.activeUid !== uid || cur.logFrom !== seen.logFrom) && t.step === 'roll') SFX.play('turn');
+      }
+    }
+    seen = cur;
+  }
+
   /* ---------- 畫面 ---------- */
   function render() {
+    detectEvents();
     if (view === 'home') renderHome();
     else if (S && S.status === 'lobby') renderLobby();
     else if (S) renderGame();
@@ -1201,6 +1291,7 @@ const APP = (() => {
       ${conn}
       <div class="spacer"></div>
       <div class="btn-row">
+        <button class="btn ghost" data-act="mute" title="開關音效">${SFX.muted ? '🔇 靜音' : '🔊 音效'}</button>
         <button class="btn ghost" data-act="rules">規則與卡表</button>
         ${isHost() && S.status === 'playing' ? `<button class="btn ghost" data-act="forceSkip" title="當輪到的人離線時使用">強制跳過回合</button>` : ''}
         <button class="btn ghost" data-act="leave">${isHost() && NET.hostOwnsRoom ? '關閉房間' : (S.status === 'lobby' && me() ? '離開房間' : '回到大廳')}</button>
@@ -1354,8 +1445,18 @@ const APP = (() => {
   function ledgerHTML() {
     const t = S.turn; if (!t) return '';
     const rows = S.log.filter(l => l.n > t.logFrom);
+    return (rows.length ? `<div class="ledger">${rows.map(l => `<div class="l ${esc(l.c)}">${esc(l.t)}</div>`).join('')}</div>` : '') + prevTurnHTML();
+  }
+  function prevTurnHTML() {
+    const t = S.turn, lt = S.lastTurn;
+    if (!t || !lt || t.prevPi == null || S.status !== 'playing') return '';
+    const rows = S.log.filter(l => l.n > t.prevFrom && l.n <= t.logFrom);
     if (!rows.length) return '';
-    return `<div class="ledger">${rows.map(l => `<div class="l ${esc(l.c)}">${esc(l.t)}</div>`).join('')}</div>`;
+    const who = S.players[lt.pi] ? (S.players[lt.pi].uid === uid ? '你' : S.players[lt.pi].name) : '?';
+    const did = lt.forced ? '被強制跳過' : `擲出 ${lt.total}，${lt.builtName ? '建造了 ' + lt.builtName : (lt.airport ? '沒建造（機場 +10）' : '沒有建造')}${lt.invested ? '，投資科技新創 1 元' : ''}`;
+    return `<details class="prev" ${t.step === 'roll' ? 'open' : ''}>
+      <summary><span class="pv">上一回合 · ${esc(who)}</span><span class="pd">${esc(did)}</span></summary>
+      <div class="ledger">${rows.map(l => `<div class="l ${esc(l.c)}">${esc(l.t)}</div>`).join('')}</div></details>`;
   }
 
   const PENDING_ZH = {purpleOrder: '決定紫色建築的發動順序', tv: '選擇電視台的收錢對象', business: '決定商業中心要交換哪張建築', renovation: '選擇裝修公司要關閉哪種建築', exhibit: '決定展覽館要改發動哪張建築', demolition: '選擇拆除公司要拆哪座地標', moving: '決定搬家公司要送出哪張建築'};
@@ -1420,8 +1521,10 @@ const APP = (() => {
 
   /* ---------- 事件 ---------- */
   document.addEventListener('click', e => {
+    SFX.unlock();
     const el = e.target.closest('[data-act]'); if (!el) return;
     const a = el.dataset.act;
+    if (a !== 'mute') SFX.play('click');
     const needTurn = () => { if (!isMyTurn()) { toast('還沒輪到你'); return false; } return true; };
     const send = (...args) => NET.send(...args);
     switch (a) {
@@ -1431,6 +1534,7 @@ const APP = (() => {
       case 'joinHere': NET.joinRoom(S.code); break;
       case 'resume': NET.resume && NET.resume(); break;
       case 'leave': NET.leave(); break;
+      case 'mute': SFX.toggle(); render(); break;
       case 'rules': $('#rulesBody').innerHTML = rulesHTML(); $('#rulesDlg').showModal(); break;
       case 'closeRules': $('#rulesDlg').close(); break;
       case 'start': if (isHost()) send('start'); break;
