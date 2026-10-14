@@ -333,18 +333,18 @@ const CARDS = [
   {id:'warehouse',zh:'食品倉庫', en:'Food Warehouse',     set:'harbor', color:'green',  icon:'factory', cost:2, nums:[12,13],  effect:{kind:'perIcon',icon:'cup',amt:2}, desc:'你每有一張 ☕ 建築，從銀行拿 2 元。'},
   {id:'tuna',     zh:'鮪魚船',   en:'Tuna Boat',          set:'harbor', color:'blue',   icon:'boat',    cost:5, nums:[12,13,14], effect:{kind:'tuna'},                desc:'若你已建港口：擲骰玩家再擲 2 顆骰，你的每艘鮪魚船都拿到該點數的錢（全部鮪魚船共用同一次擲骰）。'},
   {id:'publisher',zh:'出版社',   en:'Publisher',          set:'harbor', color:'purple', icon:'major',   cost:5, nums:[7],      effect:{kind:'publisher'},             desc:'每位對手每有一張 ☕ 或 🍞 建築，付你 1 元。'},
-  {id:'tax',      zh:'稅務局',   en:'Tax Office',         set:'harbor', color:'purple', icon:'major',   cost:4, nums:[8,9],    effect:{kind:'tax'},                   desc:'每位擁有 10 元以上的對手，付你一半的錢（無條件捨去）。'},
+  {id:'tax',      zh:'稅務局',   en:'Tax Office',         set:'harbor', color:'purple', icon:'major',   cost:4, nums:[8,9],    effect:{kind:'tax'},                   desc:'每位持有 10 元以上（含 10 元）的對手，付你一半的錢（無條件捨去）。'},
   // ---- 富豪街擴充 ----
-  {id:'general',  zh:'雜貨店',   en:'General Store',      set:'mr',     color:'green',  icon:'bread',   cost:0, nums:[2],      effect:{kind:'general'},               desc:'若你已建的地標少於 2 座，從銀行拿 2 元。'},
-  {id:'corn',     zh:'玉米田',   en:'Corn Field',         set:'mr',     color:'blue',   icon:'wheat',   cost:2, nums:[3,4],    effect:{kind:'bank',amt:1,cond:'lt2'}, desc:'若你已建的地標少於 2 座，從銀行拿 1 元。'},
+  {id:'general',  zh:'雜貨店',   en:'General Store',      set:'mr',     color:'green',  icon:'bread',   cost:0, nums:[2],      effect:{kind:'general'},               desc:'若你已建的地標少於 2 座（0 或 1 座；2 座就無效），從銀行拿 2 元。'},
+  {id:'corn',     zh:'玉米田',   en:'Corn Field',         set:'mr',     color:'blue',   icon:'wheat',   cost:2, nums:[3,4],    effect:{kind:'bank',amt:1,cond:'lt2'}, desc:'若你已建的地標少於 2 座（0 或 1 座；2 座就無效），從銀行拿 1 元。'},
   {id:'demolition',zh:'拆除公司',en:'Demolition Company', set:'mr',     color:'green',  icon:'suitcase',cost:2, nums:[4],      effect:{kind:'demolition'},            desc:'若可能，必須拆除你的一座已建地標（翻回未建）；拆除後從銀行拿 8 元。'},
   {id:'loan',     zh:'貸款公司', en:'Loan Office',        set:'mr',     color:'green',  icon:'suitcase',cost:0, nums:[5,6],    effect:{kind:'loan'},                  desc:'建造時先從銀行拿 5 元；之後每次發動要付銀行 2 元。'},
-  {id:'french',   zh:'法式餐廳', en:'French Restaurant',  set:'mr',     color:'red',    icon:'cup',     cost:3, nums:[5],      effect:{kind:'take',amt:5,cond:'lmgte2'}, desc:'若擲骰的玩家已建 2 座以上地標，向他收 5 元。'},
+  {id:'french',   zh:'法式餐廳', en:'French Restaurant',  set:'mr',     color:'red',    icon:'cup',     cost:3, nums:[5],      effect:{kind:'take',amt:5,cond:'lmgte2'}, desc:'若擲骰的玩家已建 2 座以上地標（含 2 座），向他收 5 元。'},
   {id:'vineyard', zh:'葡萄園',   en:'Vineyard',           set:'mr',     color:'blue',   icon:'wheat',   cost:3, nums:[7],      effect:{kind:'bank',amt:3},            desc:'從銀行拿 3 元。'},
   {id:'winery',   zh:'釀酒廠',   en:'Winery',             set:'mr',     color:'green',  icon:'factory', cost:3, nums:[9],      effect:{kind:'winery'},                desc:'你每有一座葡萄園，從銀行拿 6 元；然後這張釀酒廠關閉整修。'},
   {id:'moving',   zh:'搬家公司', en:'Moving Company',     set:'mr',     color:'green',  icon:'suitcase',cost:2, nums:[9,10],   effect:{kind:'moving'},                desc:'必須把你的一張非紫色建築送給另一位玩家；送出後從銀行拿 4 元。'},
   {id:'soda',     zh:'汽水工廠', en:'Soda Bottling Plant',set:'mr',     color:'green',  icon:'factory', cost:5, nums:[11],     effect:{kind:'soda'},                  desc:'全部玩家（含你）每有一張 ☕ 建築，你從銀行拿 1 元。'},
-  {id:'club',     zh:'會員俱樂部',en:'Private Club',      set:'mr',     color:'red',    icon:'cup',     cost:4, nums:[12,13,14], effect:{kind:'takeAll',cond:'lmgte3'}, desc:'若擲骰的玩家已建 3 座以上地標，拿走他所有的錢。'},
+  {id:'club',     zh:'會員俱樂部',en:'Private Club',      set:'mr',     color:'red',    icon:'cup',     cost:4, nums:[12,13,14], effect:{kind:'takeAll',cond:'lmgte3'}, desc:'若擲骰的玩家已建 3 座以上地標（含 3 座），拿走他所有的錢。'},
   {id:'park',     zh:'公園',     en:'Park',               set:'mr',     color:'purple', icon:'major',   cost:3, nums:[11,12,13], effect:{kind:'park'},                 desc:'把所有玩家的錢集中後平均分配（除不盡時由銀行補足）。'},
   {id:'renovation',zh:'裝修公司',en:'Renovation Company', set:'mr',     color:'purple', icon:'major',   cost:4, nums:[8],      effect:{kind:'renovation'},            desc:'選一種非紫色建築：所有玩家的該建築全部關閉整修；每位對手每有一張該建築，付你 1 元。'},
   {id:'tech',     zh:'科技新創', en:'Tech Startup',       set:'mr',     color:'purple', icon:'major',   cost:1, nums:[10],     effect:{kind:'tech'},                  desc:'每回合結束前可投資 1 元到這張卡；發動時每位對手付你等於投資總額的錢。'},
@@ -354,10 +354,10 @@ const CARD_BY_ID = Object.fromEntries(CARDS.map(c => [c.id, c]));
 
 const LANDMARKS = [
   {key:'station', zh:'火車站', en:'Train Station',  set:'base',   cost:4,  desc:'你可以選擇擲 1 顆或 2 顆骰子。'},
-  {key:'mall',    zh:'購物中心', en:'Shopping Mall', set:'base',   cost:10, desc:'你的 ☕ 和 🍞 建築每次發動時多拿 1 元。'},
+  {key:'mall',    zh:'購物中心', en:'Shopping Mall', set:'base',   cost:10, desc:'你的 ☕ 和 🍞 建築每次發動時多拿 1 元（紅色建築多收的 1 元同樣是向擲骰玩家收，不是銀行補）。'},
   {key:'amuse',   zh:'遊樂園', en:'Amusement Park', set:'base',   cost:16, desc:'擲出兩顆相同點數時，這回合結束後再多玩一回合。'},
   {key:'tower',   zh:'廣播塔', en:'Radio Tower',    set:'base',   cost:22, desc:'每回合可以重擲一次骰子。'},
-  {key:'harbor',  zh:'港口',   en:'Harbor',         set:'harbor', cost:2,  desc:'擲骰總和 10 以上時，可以把總和 +2。'},
+  {key:'harbor',  zh:'港口',   en:'Harbor',         set:'harbor', cost:2,  desc:'擲骰總和 10 以上（含 10）時，可以把總和 +2。'},
   {key:'airport', zh:'機場',   en:'Airport',        set:'harbor', cost:30, desc:'這回合沒有建造任何東西時，從銀行拿 10 元。'},
 ];
 const LM_BY_KEY = Object.fromEntries(LANDMARKS.map(l => [l.key, l]));
@@ -380,12 +380,12 @@ const RULES_TEXT = {
   mr: [
     '新增「整修」機制：被關閉整修的建築（翻面／放標記）不會發動；下次骰到它的號碼時，只會恢復營業而不產生效果。你新買的同種建築是營業中的。',
     '釀酒廠發動後會自己關閉整修；裝修公司可以關閉所有人的某一種非紫色建築並向對手收錢。',
-    '多張卡會看「你已建幾座地標」（市政廳不算）：雜貨店、玉米田要少於 2 座才有效；法式餐廳、會員俱樂部則是擲骰者地標越多越慘。',
+    '多張卡會看「你已建幾座地標」（市政廳不算）：雜貨店、玉米田要少於 2 座（0 或 1 座）才有效；法式餐廳在擲骰者有 2 座以上（含 2）時發動，會員俱樂部要 3 座以上（含 3）。',
     '拆除公司會逼你拆掉一座已建地標換 8 元；搬家公司會逼你送出一張建築換 4 元；貸款公司免費還倒拿 5 元，但之後每次發動要付 2 元。',
     '科技新創：每回合結束前可投資 1 元放到卡上，發動時每位對手都要付你投資總額。',
     '展覽館：發動時可以改成發動你的一張藍／綠建築，用完後退回供應區。',
   ],
-  shopping: '購物中心讓你的 ☕ 與 🍞 建築每次發動多 1 元（花店、雜貨店算 🍞；壽司店、披薩店、漢堡店、法式餐廳算 ☕）。條件不成立的卡（例如沒港口的壽司店）不會發動，也就沒有加成。',
+  shopping: '購物中心讓你的 ☕ 與 🍞 建築每次發動多 1 元（花店、雜貨店算 🍞；壽司店、披薩店、漢堡店、法式餐廳算 ☕）。紅色建築的加成是一起向擲骰玩家收（咖啡店變成收 2 元），不是收 1 元再跟銀行拿 1 元；擲骰者錢不夠就只付得出的部分。條件不成立的卡（例如沒港口的壽司店）不會發動，也就沒有加成。',
 };
 
 /* ===== 遊戲引擎（純邏輯，不碰 DOM） ===== */
@@ -889,6 +889,7 @@ const E = (() => {
         if (key === 'market') s.settings.market = on ? 'ten' : 'all';
         else if (key === 'harbor' || key === 'mr') s.settings[key] = !!on;
         else if (key === 'botSpeed' && ['fast', 'normal', 'slow'].includes(on)) s.settings.botSpeed = on;
+        else if (key === 'botLevel' && ['normal', 'strong', 'max'].includes(on)) s.settings.botLevel = on;
         else return false;
         return true;
       }
@@ -907,13 +908,230 @@ const E = (() => {
     }
   }
   const API = {
-    setRng: f => { rng = f; },
+    setRng: f => { rng = f; }, getRng: () => rng,
     cardsInPlay, landmarksInPlay, lmCount, openCopies, countIcon,
     newGame, addPlayer, removePlayer, start, rematch,
     roll, reroll, canHarbor, setHarbor, confirmRoll, decide,
     canBuyCard, canBuyLandmark, canInvest, buyCard, buyLandmark, invest, endTurn, forceSkip, apply,
   };
   return API;
+})();
+
+/* ===== 電腦玩家（快速啟發式：不搜尋、不等待） ===== */
+const AI_V1 = (() => {
+  const D1 = {1: 1 / 6, 2: 1 / 6, 3: 1 / 6, 4: 1 / 6, 5: 1 / 6, 6: 1 / 6};
+  const D2 = {}; for (let a = 1; a <= 6; a++) for (let b = 1; b <= 6; b++) D2[a + b] = (D2[a + b] || 0) + 1 / 36;
+  const dist = p => (p.lm.station ? D2 : D1);
+  const pNums = (p, nums) => nums.reduce((t, n) => t + (dist(p)[n] || 0), 0);
+  const opps = (s, pi) => s.players.filter((q, i) => i !== pi);
+  const cupBread = p => E.countIcon(p, 'cup') + E.countIcon(p, 'bread');
+  const mall = (p, c) => (p.lm.mall && (c.icon === 'cup' || c.icon === 'bread')) ? 1 : 0;
+
+  /* 一張自己的藍/綠卡（open 張）在自己回合發動的立即收益 */
+  function ownGain(s, p, card, open) {
+    const e = card.effect;
+    if (card.color === 'blue') {
+      if (e.kind === 'tuna') return p.lm.harbor ? 7 * open : 0;
+      if (e.cond === 'harbor' && !p.lm.harbor) return 0;
+      if (e.cond === 'lt2' && E.lmCount(p) >= 2) return 0;
+      return e.amt * open;
+    }
+    switch (e.kind) {
+      case 'bank': return (e.amt + mall(p, card)) * open;
+      case 'perIcon': return (E.countIcon(p, e.icon) * e.amt + mall(p, card)) * open;
+      case 'general': return E.lmCount(p) < 2 ? (2 + mall(p, card)) * open : 0;
+      case 'soda': return s.players.reduce((t, q) => t + E.countIcon(q, 'cup'), 0) * open;
+      case 'loan': return -2 * open;
+      case 'winery': return 6 * (p.est.vineyard || 0) * open * 0.6; // 發動後會關閉，打折
+      case 'demolition': return E.landmarksInPlay(s).some(l => p.lm[l.key]) ? -3 * open : 0;
+      case 'moving': return 1 * open;
+    }
+    return 0;
+  }
+  /* 別人的紅卡在我擲到時會向我收多少 */
+  function redTake(card, owner, roller) {
+    const e = card.effect;
+    if (e.cond === 'harbor' && !owner.lm.harbor) return 0;
+    if (e.cond === 'lmgte2' && E.lmCount(roller) < 2) return 0;
+    if (e.cond === 'lmgte3' && E.lmCount(roller) < 3) return 0;
+    if (e.kind === 'takeAll') return roller.coins;
+    return e.amt + mall(owner, card);
+  }
+  function purpleValue(s, pi, id) {
+    const p = s.players[pi], os = opps(s, pi);
+    switch (id) {
+      case 'stadium': return os.reduce((t, q) => t + Math.min(2, q.coins), 0);
+      case 'tv': return Math.min(5, Math.max(0, ...os.map(q => q.coins)));
+      case 'business': return 1.5;
+      case 'publisher': return os.reduce((t, q) => t + Math.min(q.coins, cupBread(q)), 0);
+      case 'tax': return os.reduce((t, q) => t + (q.coins >= 10 ? Math.floor(q.coins / 2) : 0), 0);
+      case 'park': { const tot = s.players.reduce((t, q) => t + q.coins, 0); return Math.ceil(tot / s.players.length) - p.coins; }
+      case 'renovation': return 2;
+      case 'tech': return os.reduce((t, q) => t + Math.min(q.coins, p.tech || 0), 0);
+      case 'exhibit': return 3;
+    }
+    return 0;
+  }
+  /* 擲到 n 時我的淨損益（含付給對手、對手藍卡收入的相對損失） */
+  function rollValue(s, pi, n) {
+    const ps = s.players, p = ps[pi]; let v = 0, pay = 0;
+    for (const card of E.cardsInPlay(s)) {
+      if (!card.nums.includes(n)) continue;
+      const open = E.openCopies(p, card.id);
+      if (open > 0 && (card.color === 'blue' || card.color === 'green')) v += ownGain(s, p, card, open);
+      if (card.color === 'purple' && p.est[card.id]) v += purpleValue(s, pi, card.id);
+      for (const q of ps) {
+        if (q === p) continue;
+        const oq = E.openCopies(q, card.id); if (!oq) continue;
+        if (card.color === 'red') pay += redTake(card, q, p) * oq;
+        else if (card.color === 'blue') v -= 0.4 * ownGain(s, q, card, oq);
+      }
+    }
+    return v - Math.min(pay, p.coins);
+  }
+  function ev(s, pi, nDice) {
+    const d = nDice === 2 ? D2 : D1; let t = 0;
+    for (const n in d) t += d[n] * rollValue(s, pi, +n);
+    if (nDice === 2 && s.players[pi].lm.amuse) t *= 1.12;
+    return t;
+  }
+
+  /* 建築對我的每輪期望收益（再多擁有一張時） */
+  function cardRate(s, pi, card) {
+    const p = s.players[pi], os = opps(s, pi);
+    if (card.color === 'blue') {
+      let g = ownGain(s, p, card, 1);
+      if (!g && !p.lm.harbor) { if (card.effect.kind === 'tuna') g = 3; else if (card.effect.cond === 'harbor') g = card.effect.amt * 0.5; }
+      const act = s.players.reduce((t, q) => t + pNums(q, card.nums), 0);
+      return g * act + synergy(s, p, card);
+    }
+    if (card.color === 'green') {
+      const probe = Object.assign({}, p, {est: Object.assign({}, p.est, {[card.id]: (p.est[card.id] || 0) + 1}), closed: {}});
+      return ownGain(s, probe, card, 1) * pNums(p, card.nums);
+    }
+    if (card.color === 'red') {
+      const act = os.reduce((t, q) => t + pNums(q, card.nums) * (q.coins > 2 ? 1 : 0.5), 0);
+      const amt = card.effect.kind === 'takeAll' ? 6 : card.effect.amt + mall(p, card);
+      return amt * act * 0.9;
+    }
+    return purpleValue(s, pi, card.id) * pNums(p, card.nums) + 0.3;
+  }
+  function synergy(s, p, card) { // 一級產業被我的工廠加乘
+    let t = 0;
+    for (const f of E.cardsInPlay(s)) {
+      if (f.color !== 'green' || f.effect.kind !== 'perIcon' || f.effect.icon !== card.icon || !p.est[f.id]) continue;
+      t += f.effect.amt * p.est[f.id] * pNums(p, f.nums);
+    }
+    if (card.id === 'vineyard' && p.est.winery) t += 3 * pNums(p, [9]);
+    return t;
+  }
+  const income = (s, pi) => Object.keys(s.players[pi].est).reduce((t, id) => { const c = CARD_BY_ID[id]; return t + (c.color === 'purple' ? 0 : cardRate(s, pi, c) * (s.players[pi].est[id])); }, 0) / 1.5;
+
+  const params = {incF: 0.25, coinF: 1.2, lateRound: 10, greatScore: 1.2, greatRate: 2.0, minRate: 0.0};
+  const LM_ORDER = ['harbor', 'station', 'mall', 'amuse', 'tower', 'airport'];
+  function pickLandmark(s, pi) {
+    const p = s.players[pi];
+    const cands = E.landmarksInPlay(s).filter(l => E.canBuyLandmark(s, l.key));
+    if (!cands.length) return null;
+    cands.sort((a, b) => LM_ORDER.indexOf(a.key) - LM_ORDER.indexOf(b.key));
+    // 購物中心沒有杯/麵包卡時先往後排
+    if (cands[0].key === 'mall' && cupBread(p) < 2 && cands.length > 1) cands.push(cands.shift());
+    return cands[0];
+  }
+
+  /* ---------- 決策 ---------- */
+  function chooseDice(s, pi) { const p = s.players[pi]; if (!p.lm.station) return 1; return ev(s, pi, 2) >= ev(s, pi, 1) - 0.2 ? 2 : 1; }
+  function wantReroll(s, pi) { const t = s.turn; return rollValue(s, pi, t.raw) < ev(s, pi, t.dice.length) - 1.5; }
+  function wantHarbor(s, pi) { const t = s.turn; return rollValue(s, pi, t.raw + 2) > rollValue(s, pi, t.raw) + 0.5; }
+
+  function buildChoice(s, pi) {
+    const p = s.players[pi];
+    const lm = pickLandmark(s, pi);
+    const inc = income(s, pi);
+    let best = null, bestScore = 0;
+    for (const id of Object.keys(s.market.up)) {
+      if (!E.canBuyCard(s, id)) continue;
+      const c = CARD_BY_ID[id];
+      const rate = cardRate(s, pi, c) + (Object.keys(p.est).some(x => CARD_BY_ID[x].nums.some(n => c.nums.includes(n))) ? 0 : 0.25);
+      const score = rate / Math.max(1, c.cost) + rate * 0.08;
+      if (score > bestScore) { bestScore = score; best = {id, rate, score}; }
+    }
+    const built = E.lmCount(p), total = E.landmarksInPlay(s).length, P = params;
+    if (lm) {
+      const cheap = lm.cost <= 4;
+      const ready = inc >= P.incF * lm.cost || p.coins >= lm.cost * P.coinF || built >= total - 2 || s.round >= P.lateRound;
+      const estGreat = best && best.score >= P.greatScore && best.rate >= P.greatRate && lm.cost >= 10;
+      if (cheap || (ready && !estGreat)) return {kind: 'lm', key: lm.key};
+    }
+    if (p.lm.airport && !(best && best.rate >= 2.5)) return {kind: 'pass'};
+    if (best && (best.rate >= P.minRate || CARD_BY_ID[best.id].cost === 0)) return {kind: 'card', id: best.id};
+    if (lm && p.coins >= lm.cost) return {kind: 'lm', key: lm.key};
+    return {kind: 'pass'};
+  }
+
+  function decidePending(s, pi) {
+    const p = s.players[pi], pd = s.pending, os = s.players.map((q, i) => ({q, i})).filter(x => x.i !== pi);
+    const nonPurple = q => Object.keys(q.est).filter(id => CARD_BY_ID[id].color !== 'purple');
+    const myRate = id => cardRate(s, pi, CARD_BY_ID[id]);
+    switch (pd.k) {
+      case 'purpleOrder': { const pref = ['tv', 'stadium', 'tax', 'publisher', 'tech', 'renovation', 'business', 'exhibit', 'park']; return {id: pref.find(x => pd.ids.includes(x)) || pd.ids[0]}; }
+      case 'tv': { const r = os.slice().sort((a, b) => b.q.coins - a.q.coins)[0]; return {pid: r.i}; }
+      case 'business': {
+        const mine = nonPurple(p).sort((a, b) => myRate(a) - myRate(b))[0];
+        let bestT = null, bestV = -1;
+        os.forEach(x => nonPurple(x.q).forEach(id => { const v = myRate(id); if (v > bestV) { bestV = v; bestT = {pid: x.i, id}; } }));
+        if (mine && bestT && bestV > myRate(mine) + 0.8) return {mine, pid: bestT.pid, theirs: bestT.id};
+        return {skip: true};
+      }
+      case 'renovation': {
+        let bestId = null, bestV = -Infinity;
+        const types = new Set(); s.players.forEach(q => Object.keys(q.est).forEach(id => { if (CARD_BY_ID[id].color !== 'purple') types.add(id); }));
+        for (const id of types) {
+          const c = CARD_BY_ID[id];
+          const gain = os.reduce((t, x) => t + Math.min(x.q.coins, x.q.est[id] || 0) + 0.6 * (x.q.est[id] || 0) * cardRate(s, x.i, c), 0);
+          const loss = (p.est[id] || 0) * myRate(id);
+          if (gain - loss > bestV) { bestV = gain - loss; bestId = id; }
+        }
+        return {id: bestId};
+      }
+      case 'exhibit': {
+        let bestId = null, bestV = 0;
+        for (const id of Object.keys(p.est)) { const c = CARD_BY_ID[id]; if (!['blue', 'green'].includes(c.color)) continue; const v = ownGain(s, p, c, E.openCopies(p, id)); if (v > bestV) { bestV = v; bestId = id; } }
+        return bestId && bestV >= 3 ? {id: bestId} : {skip: true};
+      }
+      case 'demolition': { const keys = E.landmarksInPlay(s).filter(l => p.lm[l.key]).sort((a, b) => a.cost - b.cost); return {key: keys[0].key}; }
+      case 'moving': {
+        const mine = nonPurple(p).sort((a, b) => myRate(a) - myRate(b))[0];
+        const target = os.slice().sort((a, b) => E.lmCount(a.q) - E.lmCount(b.q) || a.q.coins - b.q.coins)[0];
+        return {id: mine, pid: target.i};
+      }
+    }
+    return null;
+  }
+  const wantInvest = (s, pi) => { const p = s.players[pi]; return E.canInvest(s) && p.coins >= 6 && !E.landmarksInPlay(s).some(l => !p.lm[l.key] && l.cost <= p.coins + 2); };
+
+  /* 執行「一步」：每次呼叫只做一個引擎動作，方便加上停頓讓人看清楚 */
+  function step(s) {
+    const t = s.turn, pi = t.pi;
+    if (s.status !== 'playing') return false;
+    if (t.step === 'roll') return E.roll(s, chooseDice(s, pi));
+    if (t.step === 'rolled') {
+      const p = s.players[pi];
+      if (p.lm.tower && !t.rerolled && wantReroll(s, pi)) return E.reroll(s);
+      if (E.canHarbor(s) && !t.harborUsed && wantHarbor(s, pi)) return E.setHarbor(s, true);
+      return E.confirmRoll(s);
+    }
+    if (t.step === 'income') { const c = decidePending(s, pi); return c ? E.decide(s, c) : E.forceSkip(s); }
+    if (t.step === 'build') {
+      if (t.built) return wantInvest(s, pi) ? E.invest(s) : E.endTurn(s);
+      const ch = buildChoice(s, pi);
+      if (ch.kind === 'lm') return E.buyLandmark(s, ch.key);
+      if (ch.kind === 'card') return E.buyCard(s, ch.id);
+      return wantInvest(s, pi) ? E.invest(s) : E.endTurn(s);
+    }
+    return false;
+  }
+  return {step, chooseDice, buildChoice, decidePending, ev, income, params};
 })();
 
 /* ===== 電腦玩家 v2：以「還要幾輪才能蓋完地標」為核心的快速規劃 =====
@@ -926,7 +1144,7 @@ const E = (() => {
 const AI = (() => {
   const D1 = {1: 1 / 6, 2: 1 / 6, 3: 1 / 6, 4: 1 / 6, 5: 1 / 6, 6: 1 / 6};
   const D2 = {}; for (let a = 1; a <= 6; a++) for (let b = 1; b <= 6; b++) D2[a + b] = (D2[a + b] || 0) + 1 / 36;
-  const params = {growth: 0.06, cashReturn: 0.05, stationProspect: 0.3, riskRounds: 3, passPenalty: 0.6, rerollMargin: 1.5, harborMargin: 0.5};
+  const params = {growth: 0.06, cashReturn: 0.05, stationProspect: 0.3, riskRounds: 3, passPenalty: 0.25, rerollMargin: 1.5, harborMargin: 0.5, depth: 1, beam: 5, refillPerPlayer: 0.25, maxDelay: 6, synergyW: 0, lambdaOpp: 0, mcRollouts: 0, mcHorizon: 6, mcCandidates: 3, mcBudgetMs: 700, mcOppW: 0.3, mcGap: 1.0, mcPrior: 0.5, mcFastRollout: false};
   const dist = p => (p.lm.station ? D2 : D1);
   const cupBread = p => E.countIcon(p, 'cup') + E.countIcon(p, 'bread');
   const mall = (p, c) => (p.lm.mall && (c.icon === 'cup' || c.icon === 'bread')) ? 1 : 0;
@@ -1066,44 +1284,116 @@ const AI = (() => {
     return Math.max(nU, t);
   }
 
-  /* ---------- 建造決策 ---------- */
-  function evaluateOptions(s, pi) {
-    const p = s.players[pi], K = p.coins;
-    const unbuilt = E.landmarksInPlay(s).filter(l => !p.lm[l.key]);
-    const R = unbuilt.reduce((t, l) => t + l.cost, 0), nU = unbuilt.length;
-    const I0 = incomePerRound(s, pi);
-    const T0 = roundsToWin(K, R, I0, nU, 0);
-    const riskOf = K2 => cashRisk(s, pi, K2) * Math.min(T0, params.riskRounds);
-    const opts = [];
-    const passK = K + (p.lm.airport ? 10 : 0);
-    opts.push({kind: 'pass', T: roundsToWin(passK, R, I0, nU, riskOf(passK)) + (p.lm.airport ? 0 : params.passPenalty)});
-    for (const l of unbuilt) {
-      if (!E.canBuyLandmark(s, l.key)) continue;
-      const ps = probe(s, pi, np => { np.lm[l.key] = true; np.coins = K - l.cost; });
-      let I1 = incomePerRound(ps, pi);
-      if (l.key === 'station') I1 += params.stationProspect; // 之後 7–12 號的卡都用得上
-      // 提早蓋地標的機會成本：這筆錢若先投資在建築上，到結束前會滾出更多錢
-      const Tafter = roundsToWin(K - l.cost, R - l.cost, I1, nU - 1, 0);
-      const opp = l.cost * (Math.pow(1 + params.cashReturn, Math.min(Tafter, 40)) - 1);
-      opts.push({kind: 'lm', key: l.key, T: roundsToWin(K - l.cost, R - l.cost, I1, nU - 1, riskOf(K - l.cost) + opp) - 0.05});
-    }
-    for (const id of Object.keys(s.market.up)) {
-      if (!E.canBuyCard(s, id)) continue;
-      const c = CARD_BY_ID[id];
-      const K1 = K - c.cost + (c.effect.kind === 'loan' ? 5 : 0);
-      const ps = probe(s, pi, np => { np.est[id] = (np.est[id] || 0) + 1; np.coins = K1; });
-      let I1 = incomePerRound(ps, pi);
-      // 只在地標少於 2 座時有效的卡：效益只算到蓋第 2 座地標之前
-      if (c.effect.cond === 'lt2' || c.effect.kind === 'general') {
-        const cheapest2 = unbuilt.slice().sort((a, b) => a.cost - b.cost).slice(0, Math.max(0, 2 - E.lmCount(p)));
-        const H = Math.max(1, (cheapest2.reduce((t, l) => t + l.cost, 0) - K1) / Math.max(I0, 0.5) + cheapest2.length);
-        const frac = Math.min(1, H / Math.max(T0, 1));
-        I1 = I0 + (I1 - I0) * frac;
+  /* ---------- 市場模型：現在買得到什麼、牌庫裡的卡平均要等幾輪才會翻出來 ---------- */
+  function marketModel(s) {
+    const up = Object.assign({}, s.market.up), deck = {};
+    for (const id of s.market.deck) deck[id] = (deck[id] || 0) + 1;
+    let hidden = 0; for (const id in deck) if (!up[id]) hidden += deck[id];
+    const refillRate = params.refillPerPlayer * s.players.length; // 每輪大約翻出幾種新卡
+    const delay = {};
+    for (const id in deck) if (!up[id] && hidden) { const d = 1 / (refillRate * deck[id] / hidden); if (d <= params.maxDelay) delay[id] = d; }
+    return {up, delay};
+  }
+
+  /* 長期綜效：買一級產業時，之後可能買到的工廠會放大它；買工廠時，之後補的一級產業也會放大它 */
+  function synergyProspect(st, pi, card, mk) {
+    const p = st.players[pi]; let v = 0;
+    const avail = id => mk.up[id] > 0 ? 1 : (mk.delay[id] ? Math.min(1, 2 / mk.delay[id]) : 0);
+    if (card.color === 'blue') {
+      for (const f of E.cardsInPlay(st)) {
+        if (f.color !== 'green' || f.effect.kind !== 'perIcon' || f.effect.icon !== card.icon || p.est[f.id]) continue;
+        v += avail(f.id) * f.effect.amt * pNums(p, f.nums) * 0.5;
       }
-      opts.push({kind: 'card', id, T: roundsToWin(K1, R, I1, nU, riskOf(K1))});
+      if (card.id === 'vineyard' && !p.est.winery) v += avail('winery') * 6 * pNums(p, [9]) * 0.3;
+    } else if (card.color === 'green' && card.effect.kind === 'perIcon') {
+      let futurePrim = 0;
+      for (const b of E.cardsInPlay(st)) if (b.color === 'blue' && b.icon === card.effect.icon) futurePrim += avail(b.id) * Math.min(2, (mk.up[b.id] || 0) || 1);
+      v += Math.min(futurePrim, 2) * card.effect.amt * pNums(p, card.nums) * 0.4;
     }
-    opts.sort((a, b) => a.T - b.T || (a.kind === 'lm' ? -1 : 0) - (b.kind === 'lm' ? -1 : 0));
-    return opts;
+    return v * params.synergyW;
+  }
+  const pNums = (p, nums) => nums.reduce((t, n) => t + (dist(p)[n] || 0), 0);
+
+  function bestOpponentT(st, pi) {
+    let best = Infinity;
+    st.players.forEach((q, qi) => {
+      if (qi === pi) return;
+      const unb = E.landmarksInPlay(st).filter(l => !q.lm[l.key]);
+      const T = roundsToWin(q.coins, unb.reduce((t, l) => t + l.cost, 0), incomePerRound(st, qi), unb.length, 0);
+      if (T < best) best = T;
+    });
+    return best === Infinity ? 0 : best;
+  }
+
+  /* ---------- 建造決策：往前規劃 depth 回合（含等待牌庫翻出的卡） ---------- */
+  function evaluateOptions(s, pi) {
+    const p0 = s.players[pi];
+    const unbuilt0 = E.landmarksInPlay(s).filter(l => !p0.lm[l.key]);
+    const mk = marketModel(s);
+    const T0 = roundsToWin(p0.coins, unbuilt0.reduce((t, l) => t + l.cost, 0), incomePerRound(s, pi), unbuilt0.length, 0);
+    const riskOf = (st, K) => cashRisk(st, pi, K) * Math.min(T0, params.riskRounds);
+
+    // 一個規劃節點：st = 套用過變動的狀態、up = 規劃中剩餘的市場、K = 現金
+    function expand(st, up, K, depth, first) {
+      const p = st.players[pi];
+      const unbuilt = E.landmarksInPlay(st).filter(l => !p.lm[l.key]);
+      const R = unbuilt.reduce((t, l) => t + l.cost, 0), nU = unbuilt.length;
+      const I = incomePerRound(st, pi);
+      const opts = [];
+      // 不建造（存錢、或領機場補助）
+      const passK = K + (p.lm.airport ? 10 : 0);
+      opts.push({kind: 'pass', st, up, K: passK, R, nU, I, wait: 0, pen: p.lm.airport ? 0 : params.passPenalty});
+      // 地標
+      for (const l of unbuilt) {
+        if (l.cost > K) continue;
+        const st1 = probe(st, pi, np => { np.lm[l.key] = true; np.coins = K - l.cost; });
+        let I1 = incomePerRound(st1, pi);
+        if (l.key === 'station') I1 += params.stationProspect;
+        const Tafter = roundsToWin(K - l.cost, R - l.cost, I1, nU - 1, 0);
+        const opp = l.cost * (Math.pow(1 + params.cashReturn, Math.min(Tafter, 40)) - 1);
+        opts.push({kind: 'lm', key: l.key, st: st1, up, K: K - l.cost, R: R - l.cost, nU: nU - 1, I: I1, wait: 0, pen: -0.05, extraNeed: opp});
+      }
+      // 建築：市場上有的立刻買，牌庫裡的要等 delay 輪（這段期間照常有收入）
+      const cand = new Set(Object.keys(up).filter(id => up[id] > 0));
+      for (const id in mk.delay) cand.add(id);
+      for (const id of cand) {
+        const c = CARD_BY_ID[id];
+        if (c.color === 'purple' && p.est[id]) continue;
+        const wait = up[id] > 0 ? 0 : mk.delay[id];
+        const Kw = K + wait * I; // 等待期間累積的錢
+        if (c.cost > Kw) continue;
+        if (first && wait > 0) continue; // 這一步只能買現在就在市場上的卡
+        const K1 = Kw - c.cost + (c.effect.kind === 'loan' ? 5 : 0);
+        const st1 = probe(st, pi, np => { np.est[id] = (np.est[id] || 0) + 1; np.coins = K1; });
+        const up1 = Object.assign({}, up); if (wait === 0) up1[id] -= 1;
+        let I1 = incomePerRound(st1, pi) + synergyProspect(st, pi, c, mk);
+        if (c.effect.cond === 'lt2' || c.effect.kind === 'general') { // 只在地標少於 2 座時有效：效益只算到蓋第 2 座之前
+          const cheapest2 = unbuilt.slice().sort((a, b) => a.cost - b.cost).slice(0, Math.max(0, 2 - E.lmCount(p)));
+          const H = Math.max(1, (cheapest2.reduce((t, l) => t + l.cost, 0) - K1) / Math.max(I, 0.5) + cheapest2.length);
+          I1 = I + (I1 - I) * Math.min(1, H / Math.max(T0, 1));
+        }
+        opts.push({kind: 'card', id, st: st1, up: up1, K: K1, R, nU, I: I1, wait, pen: 0});
+      }
+      // 每個選項的葉值：還要幾輪；再扣掉「對手最快還要幾輪」（紅卡、稅務局等會拖慢對手）
+      for (const o of opts) {
+        o.leaf = o.wait + roundsToWin(o.K, o.R, o.I, o.nU, riskOf(o.st, o.K) + (o.extraNeed || 0)) + o.pen;
+        if (params.lambdaOpp > 0) o.leaf -= params.lambdaOpp * bestOpponentT(o.st, pi);
+      }
+      if (depth <= 1) { for (const o of opts) o.T = o.leaf; }
+      else {
+        opts.sort((a, b) => a.leaf - b.leaf);
+        const keep = opts.slice(0, params.beam);
+        for (const o of opts) o.T = o.leaf;
+        for (const o of keep) {
+          if (o.nU === 0) { o.T = o.leaf; continue; }
+          const sub = expand(o.st, o.up, o.K + o.I, depth - 1, false);
+          o.T = o.wait + 1 + sub[0].T + o.pen;
+        }
+      }
+      opts.sort((a, b) => a.T - b.T || (a.kind === 'lm' ? -1 : 0) - (b.kind === 'lm' ? -1 : 0));
+      return opts;
+    }
+    return expand(s, mk.up, p0.coins, params.depth, true);
   }
   const buildChoice = (s, pi) => evaluateOptions(s, pi)[0];
 
@@ -1176,6 +1466,55 @@ const AI = (() => {
     return p.coins >= 6 && !unbuilt.some(l => l.cost <= p.coins + 2);
   }
 
+  /* ---------- 深思：對前幾名的選項做隨機模擬，看哪個未來比較好 ---------- */
+  let inRollout = false;
+  function applyOption(st, o) {
+    if (o.kind === 'lm') return E.buyLandmark(st, o.key);
+    if (o.kind === 'card') return E.buyCard(st, o.id);
+    return E.endTurn(st);
+  }
+  function scoreState(st, pi, horizonRounds) {
+    if (st.status === 'ended') return st.winner === pi ? 40 : -40;
+    const me = st.players[pi], unb = E.landmarksInPlay(st).filter(l => !me.lm[l.key]);
+    const Tme = roundsToWin(me.coins, unb.reduce((t, l) => t + l.cost, 0), incomePerRound(st, pi), unb.length, 0);
+    let Topp = Infinity;
+    st.players.forEach((q, qi) => { if (qi === pi) return; const u = E.landmarksInPlay(st).filter(l => !q.lm[l.key]); const T = roundsToWin(q.coins, u.reduce((t, l) => t + l.cost, 0), incomePerRound(st, qi), u.length, 0); if (T < Topp) Topp = T; });
+    return -Tme + params.mcOppW * (Topp === Infinity ? 0 : Topp);
+  }
+  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function mcChoose(s, pi, opts) {
+    const cands = opts.slice(0, params.mcCandidates);
+    if (cands.length < 2) return cands[0];
+    // 經驗法則很有把握（第二名差太多）時不浪費時間模擬
+    if (cands[1].T - cands[0].T > params.mcGap) return cands[0];
+    const t0 = Date.now(), H = params.mcHorizon;
+    const sums = cands.map(() => 0); let n = 0;
+    const prevRng = E.getRng(), base = Math.floor(Math.random() * 1e9);
+    const rollStep = params.mcFastRollout && typeof AI_V1 !== 'undefined' ? AI_V1.step : step;
+    inRollout = true;
+    try {
+      for (let r = 0; r < params.mcRollouts; r++) {
+        if (Date.now() - t0 > params.mcBudgetMs && n >= 4) break;
+        for (let ci = 0; ci < cands.length; ci++) {
+          // 同一輪模擬對每個選項用同一組亂數（相同的骰子序列），比較才公平
+          const rng = mulberry32(base + r * 7919);
+          E.setRng(rng);
+          const st = JSON.parse(JSON.stringify(s));
+          for (let i = st.market.deck.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [st.market.deck[i], st.market.deck[j]] = [st.market.deck[j], st.market.deck[i]]; }
+          applyOption(st, cands[ci]);
+          const endRound = st.round + H; let guard = 0;
+          while (st.status === 'playing' && st.round < endRound && guard++ < 400) { if (rollStep(st) === false) E.forceSkip(st); }
+          sums[ci] += scoreState(st, pi, H);
+        }
+        n++;
+      }
+    } finally { inRollout = false; E.setRng(prevRng); }
+    // 模擬結果加上經驗法則的先驗：差距小時才讓模擬翻盤
+    let best = 0, bestScore = -Infinity;
+    for (let i = 0; i < cands.length; i++) { const sc = sums[i] / Math.max(1, n) - params.mcPrior * (cands[i].T - cands[0].T); if (sc > bestScore) { bestScore = sc; best = i; } }
+    return cands[best];
+  }
+
   /* 每次呼叫只做一個引擎動作 */
   function step(s) {
     const t = s.turn, pi = t.pi;
@@ -1190,7 +1529,8 @@ const AI = (() => {
     if (t.step === 'income') { const c = decidePending(s, pi); return c ? E.decide(s, c) : E.forceSkip(s); }
     if (t.step === 'build') {
       if (t.built) return wantInvest(s, pi) ? E.invest(s) : E.endTurn(s);
-      const ch = buildChoice(s, pi);
+      const opts = evaluateOptions(s, pi);
+      const ch = (params.mcRollouts > 0 && !inRollout) ? mcChoose(s, pi, opts) : opts[0];
       if (ch.kind === 'lm') return E.buyLandmark(s, ch.key);
       if (ch.kind === 'card') return E.buyCard(s, ch.id);
       return wantInvest(s, pi) ? E.invest(s) : E.endTurn(s);
@@ -1210,36 +1550,53 @@ const BOTS = (() => {
     for (let i = 1; i <= 4; i++) { const u = 'bot-' + i; if (!s.players.some(p => p.uid === u)) return {uid: u, name: NAMES[i - 1]}; }
     return null;
   }
-  let timer = null;
-  /* getS(): 目前狀態；run(fn): 把 fn 套用在狀態上並同步出去 */
-  function schedule(getS, run) {
+  let timer = null, thinking = false;
+  const mobile = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+  const LEVELS = {normal: '普通', strong: '強', max: '最強'};
+  const levelOf = s => { const lv = s && s.settings && s.settings.botLevel; return LEVELS[lv] ? lv : 'max'; };
+  /* 三種強度：普通＝經驗法則版、強＝獲勝輪數規劃版、最強＝規劃版＋隨機模擬深思 */
+  function stepperFor(s) {
+    const lv = levelOf(s);
+    if (lv === 'normal') return AI_V1.step;
+    AI.params.mcRollouts = lv === 'max' ? 12 : 0;
+    AI.params.mcBudgetMs = mobile ? 450 : 650;
+    return AI.step;
+  }
+  /* getS(): 目前狀態；run(fn): 把 fn 套用在狀態上並同步出去；onThink(flag): 顯示「思考中」 */
+  function schedule(getS, run, onThink) {
     clearTimeout(timer); timer = null;
     const S = getS(); if (!S || S.status !== 'playing' || !S.turn) return;
     if (!isBot(S.players[S.turn.pi])) return;
     const seq = S.seq, extra = S.turn.step === 'rolled' ? 300 : 0;
+    const heavy = S.turn.step === 'build' && !S.turn.built && levelOf(S) === 'max';
     timer = setTimeout(() => {
       timer = null;
-      const S2 = getS(); if (!S2 || S2.seq !== seq) { schedule(getS, run); return; }
-      run(s => {
-        if (s.status !== 'playing' || !isBot(s.players[s.turn.pi])) return false;
-        let ok = false; try { ok = AI.step(s); } catch (e) { console.error('AI', e); }
-        if (ok === false) E.forceSkip(s);
-        return true;
-      });
+      const S2 = getS(); if (!S2 || S2.seq !== seq) { schedule(getS, run, onThink); return; }
+      const go = () => {
+        thinking = false;
+        run(s => {
+          if (s.status !== 'playing' || !isBot(s.players[s.turn.pi])) return false;
+          const stepFn = stepperFor(s);
+          let ok = false; try { ok = stepFn(s); } catch (e) { console.error('AI', e); }
+          if (ok === false) E.forceSkip(s);
+          return true;
+        });
+      };
+      if (heavy) { thinking = true; if (onThink) onThink(true); setTimeout(go, 40); } else go();
     }, speedMs(S) + extra);
   }
-  const cancel = () => { clearTimeout(timer); timer = null; };
-  return {NAMES, SPEED, isBot, speedMs, nextBot, schedule, cancel};
+  const cancel = () => { clearTimeout(timer); timer = null; thinking = false; };
+  return {NAMES, SPEED, LEVELS, levelOf, isBot, speedMs, nextBot, schedule, cancel, get thinking() { return thinking; }};
 })();
 
 /* ===== 單機模式：玩家 vs 電腦（全部在本機執行） ===== */
 const LOCALNET = (() => {
   let uid = null;
   function bump() { const S = APP.S; if (!S) return; S.seq = (S.seq || 0) + 1; S.updatedAt = Date.now(); APP.render(); }
-  const runBots = () => BOTS.schedule(() => APP.S, fn => { if (fn(APP.S) !== false) bump(); runBots(); });
+  const runBots = () => BOTS.schedule(() => APP.S, fn => { if (fn(APP.S) !== false) bump(); runBots(); }, () => APP.render());
   function start(settings) {
     uid = APP.uid;
-    const s = E.newGame('單機', uid, {harbor: settings.harbor, mr: settings.mr, market: settings.market, botSpeed: settings.speed || 'normal'});
+    const s = E.newGame('單機', uid, {harbor: settings.harbor, mr: settings.mr, market: settings.market, botSpeed: settings.speed || 'normal', botLevel: settings.level || 'max'});
     E.addPlayer(s, uid, APP.name() || '你');
     const bots = Math.max(1, Math.min(4, settings.bots | 0));
     for (let i = 0; i < bots; i++) { const b = BOTS.nextBot(s); if (b) E.addPlayer(s, b.uid, b.name); }
@@ -1342,7 +1699,7 @@ const NET = (() => {
   function bump() {
     const S = APP.S; if (!S) return;
     S.seq = (S.seq || 0) + 1; S.updatedAt = Date.now(); saveHost(); APP.render(); broadcast();
-    if (role === 'host') BOTS.schedule(() => APP.S, fn => { if (fn(APP.S) !== false) bump(); });
+    if (role === 'host') BOTS.schedule(() => APP.S, fn => { if (fn(APP.S) !== false) bump(); }, () => APP.render());
   }
   function broadcast() {
     const msg = {type: 'state', s: APP.S};
@@ -1622,6 +1979,8 @@ const APP = (() => {
                 <select class="input" id="optBots" style="margin-top:4px"><option value="1">1 個</option><option value="2">2 個</option><option value="3" selected>3 個</option><option value="4">4 個</option></select></label>
               <label class="check" style="display:block"><span class="small muted">電腦速度</span>
                 <select class="input" id="optSpeed" style="margin-top:4px"><option value="fast">快</option><option value="normal" selected>普通</option><option value="slow">慢</option></select></label>
+              <label class="check" style="display:block"><span class="small muted">電腦強度</span>
+                <select class="input" id="optLevel" style="margin-top:4px"><option value="normal">普通（經驗法則）</option><option value="strong">強（規劃獲勝輪數）</option><option value="max" selected>最強（規劃＋模擬未來）</option></select></label>
             </div>
             <div class="btn-row" style="margin-top:8px"><button class="btn big soft" data-act="solo">開始單機對戰</button></div>
           </div>
@@ -1672,7 +2031,7 @@ const APP = (() => {
       </div>
       ${S.status !== 'lobby' ? `<div class="players">${S.players.map((p, i) => `
         <div class="pchip ${S.turn && S.turn.pi === i && S.status === 'playing' ? 'active' : ''}">
-          <div class="pname">${BOTS.isBot(p) ? '🤖 ' : ''}${esc(p.name)} ${p.uid === uid ? '<span class="you">你</span>' : ''} ${p.uid === S.hostUid ? '<span class="host">房主</span>' : ''}</div>
+          <div class="pname">${BOTS.isBot(p) ? '🤖 ' : ''}${esc(p.name)}${BOTS.isBot(p) ? `<span class="host">${BOTS.LEVELS[BOTS.levelOf(S)]}</span>` : ''} ${p.uid === uid ? '<span class="you">你</span>' : ''} ${p.uid === S.hostUid ? '<span class="host">房主</span>' : ''}</div>
           <div class="coins">${p.coins}</div>
           <div class="lmdots">${inPlay.map(l => `<i class="${p.lm[l.key] ? 'on' : ''}" title="${esc(l.zh)}"></i>`).join('')}</div>
         </div>`).join('')}</div>` : ''}
@@ -1698,7 +2057,9 @@ const APP = (() => {
         <label class="check"><input type="checkbox" data-act="setting" data-key="mr" ${S.settings.mr ? 'checked' : ''} ${host ? '' : 'disabled'}><span><b>富豪街擴充</b> <span class="small muted">— 整修機制與各種公司</span></span></label>
         <label class="check"><input type="checkbox" data-act="setting" data-key="market" ${S.settings.market === 'ten' ? 'checked' : ''} ${host ? '' : 'disabled'}><span><b>10 疊隨機市場</b> <span class="small muted">— 關閉則全部建築攤開供購買</span></span></label>
         ${hasBots ? `<label class="check" style="display:block"><span class="small muted">電腦速度（由房主的裝置執行，房主要留在房間裡）</span>
-          <select class="input" data-act="botSpeed" style="margin-top:4px;max-width:240px" ${host ? '' : 'disabled'}><option value="fast" ${bs === 'fast' ? 'selected' : ''}>快</option><option value="normal" ${bs === 'normal' ? 'selected' : ''}>普通</option><option value="slow" ${bs === 'slow' ? 'selected' : ''}>慢</option></select></label>` : ''}
+          <select class="input" data-act="botSpeed" style="margin-top:4px;max-width:240px" ${host ? '' : 'disabled'}><option value="fast" ${bs === 'fast' ? 'selected' : ''}>快</option><option value="normal" ${bs === 'normal' ? 'selected' : ''}>普通</option><option value="slow" ${bs === 'slow' ? 'selected' : ''}>慢</option></select></label>
+        <label class="check" style="display:block"><span class="small muted">電腦強度</span>
+          <select class="input" data-act="botLevel" style="margin-top:4px;max-width:240px" ${host ? '' : 'disabled'}>${['normal', 'strong', 'max'].map(lv => `<option value="${lv}" ${BOTS.levelOf(S) === lv ? 'selected' : ''}>${BOTS.LEVELS[lv]}${lv === 'normal' ? '（經驗法則）' : lv === 'strong' ? '（規劃獲勝輪數）' : '（規劃＋模擬未來）'}</option>`).join('')}</select></label>` : ''}
         <div class="btn-row" style="margin-top:12px">
           ${host ? `<button class="btn big" data-act="start" ${S.players.length < 2 ? 'disabled' : ''}>開始遊戲${S.players.length < 2 ? '（至少 2 人）' : ''}</button>` : `<div class="hint">等待房主 ${esc(S.players.find(p => p.uid === S.hostUid)?.name || '')} 開始遊戲…</div>`}
           ${!me() && S.players.length < 5 ? `<button class="btn soft" data-act="joinHere">加入這個房間</button>` : ''}
@@ -1816,7 +2177,7 @@ const APP = (() => {
         btns.push(`<button class="btn ${t.built ? '' : 'ghost'}" data-act="endTurn">${t.built ? '結束回合' : (a.lm.airport ? '不建造，領機場 10 元' : '不建造，結束回合')}</button>`);
         body = `<div class="hint">你有 <b>${a.coins}</b> 元。${t.built ? '這回合已經建造完成。' : '點「市場」裡亮起的卡片，或「你的城市」裡的地標來建造（只能買一樣）。'}</div>
           <div class="btn-row" style="justify-content:center;margin-top:10px">${btns.join('')}</div>`;
-      } else body = `<div class="hint">${esc(a.name)} 正在建造…（${a.coins} 元）</div>`;
+      } else body = `<div class="hint">${BOTS.isBot(a) && BOTS.thinking ? '🤖 ' + esc(a.name) + ' 正在思考要買什麼…' : esc(a.name) + ' 正在建造…'}（${a.coins} 元）</div>`;
     }
     return `<div class="turnhead"><span class="who">${mine ? '輪到你' : '輪到 ' + esc(a.name)}</span><span class="round">第 ${S.round} 輪</span></div>
       <div class="dice">${dice}</div>${total}${body}${ledgerHTML()}`;
@@ -1911,7 +2272,7 @@ const APP = (() => {
       case 'solo': {
         if (!$('#nameInput').value.trim()) { toast('先輸入你的暱稱'); break; }
         localMode = true;
-        LOCALNET.start({harbor: $('#optHarbor').checked, mr: $('#optMr').checked, market: $('#optMarket').value, bots: +$('#optBots').value, speed: $('#optSpeed').value});
+        LOCALNET.start({harbor: $('#optHarbor').checked, mr: $('#optMr').checked, market: $('#optMarket').value, bots: +$('#optBots').value, speed: $('#optSpeed').value, level: $('#optLevel').value});
         break;
       }
       case 'join': N().joinRoom($('#codeInput').value); break;
@@ -1945,6 +2306,8 @@ const APP = (() => {
   document.addEventListener('change', e => {
     const sp = e.target.closest('[data-act="botSpeed"]');
     if (sp) { if (isHost()) N().send('setting', 'botSpeed', sp.value); return; }
+    const th = e.target.closest('[data-act="botLevel"]');
+    if (th) { if (isHost()) N().send('setting', 'botLevel', th.value); return; }
     const el = e.target.closest('[data-act="setting"]'); if (!el || !isHost()) return;
     N().send('setting', el.dataset.key, el.checked);
   });
