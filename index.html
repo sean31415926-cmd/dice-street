@@ -114,7 +114,9 @@ select.input { appearance: auto; }
 .panel { background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; min-width: 0; }
 .panel h2 { font-size: 16px; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .panel h2 .tag { font-weight: 500; font-size: 12px; color: var(--ink2); }
-#turnPanel { grid-area: turn; align-self: start; position: sticky; top: calc(8px + env(safe-area-inset-top, 0px)); }
+#turnPanel { grid-area: turn; align-self: start; position: sticky; top: calc(8px + env(safe-area-inset-top, 0px)); max-height: calc(100vh - 16px - env(safe-area-inset-top, 0px)); overflow-y: auto; overscroll-behavior: contain; }
+@supports (height: 100dvh) { #turnPanel { max-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px)); } }
+@media (max-width: 819px) { #turnPanel { max-height: none; overflow: visible; } }
 #marketPanel { grid-area: market; }
 #citiesPanel { grid-area: cities; }
 #logPanel { grid-area: log; align-self: start; }
@@ -155,7 +157,7 @@ select.input { appearance: auto; }
 .turnhead .who { font-weight: 700; font-size: 17px; }
 .turnhead .round { color: var(--ink2); font-size: 13px; }
 .hint { background: var(--panel2); border-radius: 10px; padding: 10px 12px; font-size: 14px; color: var(--ink2); }
-.ledger { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 8px; display: grid; gap: 4px; font-size: 13.5px; }
+.ledger { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 8px; display: grid; gap: 4px; font-size: 13.5px; max-height: 38vh; overflow-y: auto; overscroll-behavior: contain; }
 .ledger .l { padding-left: 10px; border-left: 3px solid var(--line); }
 .ledger .l.red { border-color: var(--red); } .ledger .l.blue { border-color: var(--blue); }
 .ledger .l.green { border-color: var(--green); } .ledger .l.purple { border-color: var(--purple); }
@@ -263,7 +265,7 @@ details.prev .ledger { margin-top: 6px; border-top: 0; padding-top: 0; opacity: 
 .seat .empty { color: var(--ink3); }
 
 /* ---- rules dialog ---- */
-dialog { border: 0; border-radius: 16px; padding: 0; max-width: min(900px, 94vw); width: 100%; background: var(--panel); color: var(--ink); box-shadow: var(--shadow); max-height: 90vh; }
+dialog { border: 0; border-radius: 16px; padding: 0; max-width: min(900px, 94vw); width: 100%; background: var(--panel); color: var(--ink); box-shadow: var(--shadow); max-height: 90vh; overflow-y: auto; overscroll-behavior: contain; }
 dialog::backdrop { background: rgba(10, 20, 20, .5); }
 .dlg { padding: 20px; display: grid; gap: 16px; }
 .dlg h2 { font-size: 20px; }
@@ -1652,26 +1654,59 @@ const NET = (() => {
   }
 
   /* ---------- 房主 ---------- */
+  let hostRetryTimer = null, hostRetryDelay = 3000;
+  const RECONNECT_ERRS = ['unavailable-id', 'network', 'server-error', 'socket-error', 'socket-closed', 'disconnected'];
   function openHostPeer(c, onReady, tries, isResume) {
     if (!hasPeerLib()) return toast('連線元件載入失敗，請確認網路後重新整理頁面');
-    setStatus('connecting', '正在向連線伺服器登記房號…');
+    setStatus('connecting', isResume && peer ? '重新登記房號中…' : '正在向連線伺服器登記房號…');
+    let opened = false;
     const p = new Peer(PREFIX + c, {debug: 0});
-    p.on('open', () => { peer = p; role = 'host'; code = c; setStatus('online'); onReady(); });
+    p.on('open', () => {
+      opened = true; hostRetryDelay = 3000; clearTimeout(hostRetryTimer); hostRetryTimer = null;
+      peer = p; role = 'host'; code = c; setStatus('online');
+      if (onReady) { const f = onReady; onReady = null; f(); } // 只在第一次 open 執行，重連時絕不重建牌局
+      else bump(); // 重連後把現況推給重新接上的玩家
+    });
     p.on('connection', onConnection);
-    p.on('disconnected', () => { setStatus('reconnecting', '與連線伺服器斷線，重新連線中（已連上的玩家不受影響）'); try { if (!p.destroyed) p.reconnect(); } catch (e) {} });
+    p.on('disconnected', () => {
+      if (!opened || p.destroyed || peer !== p) return;
+      setStatus('reconnecting', '與連線伺服器斷線，重新登記房號中（玩家會自動重連）…');
+      scheduleHostReconnect();
+    });
     p.on('error', err => {
       console.error('peer', err);
-      if (err.type === 'unavailable-id') {
-        try { p.destroy(); } catch (e) {}
-        setStatus('idle', '');
-        if (isResume) toast('房號 ' + c + ' 還在使用中（舊分頁可能還開著），等幾秒後再按一次恢復');
-        else if (tries > 0) createRoom(pendingSettings, tries - 1);
-        else toast('建立房間失敗，請再試一次');
+      if (!opened) { // 第一次登記就失敗
+        if (err.type === 'unavailable-id' || RECONNECT_ERRS.includes(err.type)) {
+          try { p.destroy(); } catch (e) {}
+          if (isResume) {
+            setStatus('connecting', err.type === 'unavailable-id' ? `房號 ${c} 還在使用中（舊連線尚未釋放），幾秒後自動再試…` : '連線伺服器暫時連不上，幾秒後自動再試…');
+            clearTimeout(hostRetryTimer); hostRetryTimer = setTimeout(() => { if (role === 'host' || APP.S) openHostPeer(c, onReady, 0, true); }, 5000);
+          } else if (err.type === 'unavailable-id' && tries > 0) createRoom(pendingSettings, tries - 1);
+          else { setStatus('idle', ''); toast('無法連上連線伺服器（' + err.type + '），請稍後再試'); }
+        }
         return;
       }
-      if (!peer) { setStatus('idle', ''); toast('無法連上連線伺服器（' + err.type + '），請稍後再試'); }
-      else if (err.type === 'network' || err.type === 'server-error') setStatus('reconnecting', '連線伺服器暫時無法連上，重試中…');
+      // 開房之後的任何連線錯誤：只重新登記同一個房號，永遠不另開新房
+      if (peer !== p) return;
+      if (RECONNECT_ERRS.includes(err.type)) { setStatus('reconnecting', '與連線伺服器斷線，重新登記房號中（玩家會自動重連）…'); scheduleHostReconnect(); }
     });
+  }
+  function scheduleHostReconnect() {
+    clearTimeout(hostRetryTimer);
+    hostRetryTimer = setTimeout(() => {
+      hostRetryTimer = null;
+      if (role !== 'host' || !code) return;
+      const p = peer;
+      if (p && !p.destroyed && p.disconnected) { try { p.reconnect(); } catch (e) { recreateHostPeer(); } }
+      else if (!p || p.destroyed) recreateHostPeer();
+      hostRetryDelay = Math.min(Math.round(hostRetryDelay * 1.5), 15000);
+      // 保險：若一段時間後仍未連上，再排一次
+      setTimeout(() => { if (role === 'host' && peer && !peer.destroyed && peer.disconnected && !hostRetryTimer) scheduleHostReconnect(); }, 10000);
+    }, hostRetryDelay);
+  }
+  function recreateHostPeer() {
+    const old = peer; try { old && old.destroy(); } catch (e) {}
+    openHostPeer(code, null, 0, true);
   }
   let pendingSettings = null;
   function createRoom(settings, tries = 3) {
@@ -1739,15 +1774,16 @@ const NET = (() => {
   }
   function ensurePeer() {
     return new Promise(res => {
-      if (peer && !peer.destroyed) return res();
+      if (peer && !peer.destroyed && !peer.disconnected) return res();
+      if (peer) { const old = peer; peer = null; try { old.destroy(); } catch (e) {} }
       const p = new Peer({debug: 0});
-      p.on('open', () => { peer = p; res(); });
-      p.on('disconnected', () => { try { if (!p.destroyed) p.reconnect(); } catch (e) {} });
+      p.on('open', () => { if (peer && peer !== p && !peer.destroyed) { try { p.destroy(); } catch (e) {} return; } peer = p; res(); });
+      p.on('disconnected', () => { if (peer !== p || p.destroyed) return; setStatus('reconnecting', '與連線伺服器斷線，重新連線中…'); scheduleReconnect(); });
       p.on('error', err => {
         console.error('peer', err);
         if (err.type === 'peer-unavailable') { setStatus('notfound', `找不到房間 ${wantRoom}：房主的頁面要開著，房號也要正確。會每幾秒自動重試。`); scheduleReconnect(); }
-        else if (!peer) { setStatus('idle', ''); toast('無法連上連線伺服器（' + err.type + '），請稍後再試'); role = null; wantRoom = null; }
-        else { setStatus('reconnecting', '連線異常，重試中…'); scheduleReconnect(); }
+        else if (!wantRoom) { setStatus('idle', ''); }
+        else { setStatus('reconnecting', '連線伺服器暫時連不上，重試中…'); scheduleReconnect(); }
       });
     });
   }
@@ -1785,6 +1821,7 @@ const NET = (() => {
   function leave(silent) {
     if (role === 'host') {
       if (!silent && APP.S && APP.S.status !== 'ended' && !confirm('關閉房間會結束所有人的遊戲，確定嗎？')) return;
+      clearTimeout(hostRetryTimer); hostRetryTimer = null;
       Object.values(conns).forEach(c => { try { c.send({type: 'closed'}); } catch (e) {} });
       setTimeout(() => { try { peer && peer.destroy(); } catch (e) {} }, 300);
       Object.keys(conns).forEach(k => delete conns[k]);
@@ -2078,14 +2115,17 @@ const APP = (() => {
         <aside class="panel" id="logPanel"></aside></main>`;
     }
     if (!S.pending) { ui.biz = null; ui.move = null; }
-    $('#top').innerHTML = topHTML();
-    $('#turnPanel').innerHTML = turnHTML();
-    $('#marketPanel').innerHTML = marketHTML();
-    $('#citiesPanel').innerHTML = citiesHTML();
-    const logEl = $('#logPanel');
-    const wasBottom = !logEl.querySelector('.log') || (() => { const l = logEl.querySelector('.log'); return l.scrollHeight - l.scrollTop - l.clientHeight < 40; })();
-    logEl.innerHTML = logHTML();
-    if (wasBottom) { const l = logEl.querySelector('.log'); if (l) l.scrollTop = l.scrollHeight; }
+    const pageY = window.scrollY;
+    const setIfChanged = (sel, html) => { const el = $(sel); if (!el || el.innerHTML === html) return false; const st = el.scrollTop; el.innerHTML = html; el.scrollTop = st; return true; };
+    setIfChanged('#top', topHTML());
+    setIfChanged('#turnPanel', turnHTML());
+    setIfChanged('#marketPanel', marketHTML());
+    setIfChanged('#citiesPanel', citiesHTML());
+    const logEl = $('#logPanel'), oldLog = logEl.querySelector('.log');
+    const wasBottom = !oldLog || (oldLog.scrollHeight - oldLog.scrollTop - oldLog.clientHeight < 40);
+    const oldTop = oldLog ? oldLog.scrollTop : 0;
+    if (setIfChanged('#logPanel', logHTML())) { const l = logEl.querySelector('.log'); if (l) l.scrollTop = wasBottom ? l.scrollHeight : oldTop; }
+    if (Math.abs(window.scrollY - pageY) > 2) window.scrollTo(0, pageY);
   }
 
   function cardHTML(card, opts = {}) {
