@@ -891,7 +891,7 @@ const E = (() => {
         if (key === 'market') s.settings.market = on ? 'ten' : 'all';
         else if (key === 'harbor' || key === 'mr') s.settings[key] = !!on;
         else if (key === 'botSpeed' && ['fast', 'normal', 'slow'].includes(on)) s.settings.botSpeed = on;
-        else if (key === 'botLevel' && ['normal', 'strong', 'max'].includes(on)) s.settings.botLevel = on;
+        else if (key === 'botLevel' && ['normal', 'strong'].includes(on)) s.settings.botLevel = on;
         else return false;
         return true;
       }
@@ -1146,7 +1146,7 @@ const AI_V1 = (() => {
 const AI = (() => {
   const D1 = {1: 1 / 6, 2: 1 / 6, 3: 1 / 6, 4: 1 / 6, 5: 1 / 6, 6: 1 / 6};
   const D2 = {}; for (let a = 1; a <= 6; a++) for (let b = 1; b <= 6; b++) D2[a + b] = (D2[a + b] || 0) + 1 / 36;
-  const params = {growth: 0.06, cashReturn: 0.05, stationProspect: 0.3, riskRounds: 3, passPenalty: 0.25, rerollMargin: 1.5, harborMargin: 0.5, depth: 1, beam: 5, refillPerPlayer: 0.25, maxDelay: 6, synergyW: 0, lambdaOpp: 0, mcRollouts: 0, mcHorizon: 6, mcCandidates: 3, mcBudgetMs: 700, mcOppW: 0.3, mcGap: 1.0, mcPrior: 0.5, mcFastRollout: false};
+  const params = {growth: 0.06, cashReturn: 0.05, stationProspect: 0.3, riskRounds: 3, passPenalty: 0, rerollMargin: 1.5, harborMargin: 0.5, depth: 1, beam: 5, refillPerPlayer: 0.25, maxDelay: 6, synergyW: 0, lambdaOpp: 0};
   const dist = p => (p.lm.station ? D2 : D1);
   const cupBread = p => E.countIcon(p, 'cup') + E.countIcon(p, 'bread');
   const mall = (p, c) => (p.lm.mall && (c.icon === 'cup' || c.icon === 'bread')) ? 1 : 0;
@@ -1167,7 +1167,12 @@ const AI = (() => {
       case 'soda': return s.players.reduce((t, q) => t + E.countIcon(q, 'cup'), 0) * open;
       case 'loan': return -2 * open;
       case 'winery': return 6 * (p.est.vineyard || 0) * open * 0.6;
-      case 'demolition': return E.landmarksInPlay(s).some(l => p.lm[l.key]) ? -3 * open : 0;
+      case 'demolition': { // 拆最便宜的地標再蓋回來：淨賺 8 − 重建費 − 一次建造機會；越接近蓋完地標，建造機會越珍貴
+        const built = E.landmarksInPlay(s).filter(l => p.lm[l.key]);
+        if (!built.length) return 0;
+        const actionCost = 2 + 1.5 * built.length;
+        return (8 - Math.min(...built.map(l => l.cost)) - actionCost) * open;
+      }
       case 'moving': return 1 * open;
     }
     return 0;
@@ -1185,13 +1190,13 @@ const AI = (() => {
     switch (id) {
       case 'stadium': return os.reduce((t, q) => t + Math.min(2, q.coins), 0);
       case 'tv': return Math.min(5, Math.max(0, ...os.map(q => q.coins)));
-      case 'business': return 1.5;
+      case 'business': return 1.0;
       case 'publisher': return os.reduce((t, q) => t + Math.min(q.coins, cupBread(q)), 0);
       case 'tax': return os.reduce((t, q) => t + (q.coins >= 10 ? Math.floor(q.coins / 2) : 0), 0);
       case 'park': { const tot = s.players.reduce((t, q) => t + q.coins, 0); return Math.ceil(tot / s.players.length) - p.coins; }
       case 'renovation': return 2;
       case 'tech': return os.reduce((t, q) => t + Math.min(q.coins, p.tech || 0), 0);
-      case 'exhibit': return 3;
+      case 'exhibit': return 0; // 一次性效果，購買時另外估
     }
     return 0;
   }
@@ -1211,6 +1216,7 @@ const AI = (() => {
         else if (relative && card.color === 'blue') v -= 0.4 * ownGain(s, q, card, oq);
       }
     }
+    // 規劃收入時不以目前現金封頂（否則會得到「把錢花光就不用付紅卡」的錯誤誘因）；只有骰子決策看當下現金
     return v - Math.min(pay, p.coins);
   }
   /* 對手 q 擲到 n 時我的收益（我的藍卡 + 我的紅卡向他收） */
@@ -1365,7 +1371,14 @@ const AI = (() => {
         const Kw = K + wait * I; // 等待期間累積的錢
         if (c.cost > Kw) continue;
         if (first && wait > 0) continue; // 這一步只能買現在就在市場上的卡
-        const K1 = Kw - c.cost + (c.effect.kind === 'loan' ? 5 : 0);
+        let K1 = Kw - c.cost + (c.effect.kind === 'loan' ? 5 : 0);
+        if (id === 'exhibit') { // 展覽館只能用一次：換算成「現在值多少錢」而不是每輪收入
+          const d = bestDice(st, pi).n === 2 ? D2 : D1, p10 = d[10] || 0;
+          let best = 0; for (const oid of Object.keys(p.est)) { const oc = CARD_BY_ID[oid]; if (oc.color === 'blue' || oc.color === 'green') best = Math.max(best, ownGain(st, p, oc, E.openCopies(p, oid))); }
+          const hit = 1 - Math.pow(1 - p10, Math.max(1, Math.min(T0, 20)));
+          const waitDiscount = p10 > 0 ? Math.pow(1 + params.growth, -1 / p10) : 0; // 平均要等 1/p 回合才用得到
+          K1 += 0.8 * hit * waitDiscount * best;
+        }
         const st1 = probe(st, pi, np => { np.est[id] = (np.est[id] || 0) + 1; np.coins = K1; });
         const up1 = Object.assign({}, up); if (wait === 0) up1[id] -= 1;
         let I1 = incomePerRound(st1, pi) + synergyProspect(st, pi, c, mk);
@@ -1446,10 +1459,15 @@ const AI = (() => {
         for (const id of Object.keys(p.est)) { const c = CARD_BY_ID[id]; if (!['blue', 'green'].includes(c.color)) continue; const v = ownGain(s, p, c, E.openCopies(p, id)); if (v > bestV) { bestV = v; bestId = id; } }
         return bestId && bestV >= 3 ? {id: bestId} : {skip: true};
       }
-      case 'demolition': {
+      case 'demolition': { // 優先拆「重建最便宜」的地標（通常是港口），除非它正在養漁船而火車站沒在用
         const keys = E.landmarksInPlay(s).filter(l => p.lm[l.key]);
         const base = incomePerRound(s, pi);
-        const scored = keys.map(l => { const ps = probe(s, pi, np => { np.lm[l.key] = false; }); return {key: l.key, v: (base - incomePerRound(ps, pi)) * 4 + l.cost}; });
+        const scored = keys.map(l => {
+          const ps = probe(s, pi, np => { np.lm[l.key] = false; });
+          const loss = Math.max(0, base - incomePerRound(ps, pi));
+          const canRebuildNow = p.coins + 8 >= l.cost;
+          return {key: l.key, v: l.cost + loss * (canRebuildNow ? 1 : 4)};
+        });
         scored.sort((a, b) => a.v - b.v); return {key: scored[0].key};
       }
       case 'moving': {
@@ -1468,55 +1486,6 @@ const AI = (() => {
     return p.coins >= 6 && !unbuilt.some(l => l.cost <= p.coins + 2);
   }
 
-  /* ---------- 深思：對前幾名的選項做隨機模擬，看哪個未來比較好 ---------- */
-  let inRollout = false;
-  function applyOption(st, o) {
-    if (o.kind === 'lm') return E.buyLandmark(st, o.key);
-    if (o.kind === 'card') return E.buyCard(st, o.id);
-    return E.endTurn(st);
-  }
-  function scoreState(st, pi, horizonRounds) {
-    if (st.status === 'ended') return st.winner === pi ? 40 : -40;
-    const me = st.players[pi], unb = E.landmarksInPlay(st).filter(l => !me.lm[l.key]);
-    const Tme = roundsToWin(me.coins, unb.reduce((t, l) => t + l.cost, 0), incomePerRound(st, pi), unb.length, 0);
-    let Topp = Infinity;
-    st.players.forEach((q, qi) => { if (qi === pi) return; const u = E.landmarksInPlay(st).filter(l => !q.lm[l.key]); const T = roundsToWin(q.coins, u.reduce((t, l) => t + l.cost, 0), incomePerRound(st, qi), u.length, 0); if (T < Topp) Topp = T; });
-    return -Tme + params.mcOppW * (Topp === Infinity ? 0 : Topp);
-  }
-  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-  function mcChoose(s, pi, opts) {
-    const cands = opts.slice(0, params.mcCandidates);
-    if (cands.length < 2) return cands[0];
-    // 經驗法則很有把握（第二名差太多）時不浪費時間模擬
-    if (cands[1].T - cands[0].T > params.mcGap) return cands[0];
-    const t0 = Date.now(), H = params.mcHorizon;
-    const sums = cands.map(() => 0); let n = 0;
-    const prevRng = E.getRng(), base = Math.floor(Math.random() * 1e9);
-    const rollStep = params.mcFastRollout && typeof AI_V1 !== 'undefined' ? AI_V1.step : step;
-    inRollout = true;
-    try {
-      for (let r = 0; r < params.mcRollouts; r++) {
-        if (Date.now() - t0 > params.mcBudgetMs && n >= 4) break;
-        for (let ci = 0; ci < cands.length; ci++) {
-          // 同一輪模擬對每個選項用同一組亂數（相同的骰子序列），比較才公平
-          const rng = mulberry32(base + r * 7919);
-          E.setRng(rng);
-          const st = JSON.parse(JSON.stringify(s));
-          for (let i = st.market.deck.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [st.market.deck[i], st.market.deck[j]] = [st.market.deck[j], st.market.deck[i]]; }
-          applyOption(st, cands[ci]);
-          const endRound = st.round + H; let guard = 0;
-          while (st.status === 'playing' && st.round < endRound && guard++ < 400) { if (rollStep(st) === false) E.forceSkip(st); }
-          sums[ci] += scoreState(st, pi, H);
-        }
-        n++;
-      }
-    } finally { inRollout = false; E.setRng(prevRng); }
-    // 模擬結果加上經驗法則的先驗：差距小時才讓模擬翻盤
-    let best = 0, bestScore = -Infinity;
-    for (let i = 0; i < cands.length; i++) { const sc = sums[i] / Math.max(1, n) - params.mcPrior * (cands[i].T - cands[0].T); if (sc > bestScore) { bestScore = sc; best = i; } }
-    return cands[best];
-  }
-
   /* 每次呼叫只做一個引擎動作 */
   function step(s) {
     const t = s.turn, pi = t.pi;
@@ -1531,8 +1500,7 @@ const AI = (() => {
     if (t.step === 'income') { const c = decidePending(s, pi); return c ? E.decide(s, c) : E.forceSkip(s); }
     if (t.step === 'build') {
       if (t.built) return wantInvest(s, pi) ? E.invest(s) : E.endTurn(s);
-      const opts = evaluateOptions(s, pi);
-      const ch = (params.mcRollouts > 0 && !inRollout) ? mcChoose(s, pi, opts) : opts[0];
+      const ch = evaluateOptions(s, pi)[0];
       if (ch.kind === 'lm') return E.buyLandmark(s, ch.key);
       if (ch.kind === 'card') return E.buyCard(s, ch.id);
       return wantInvest(s, pi) ? E.invest(s) : E.endTurn(s);
@@ -1553,24 +1521,17 @@ const BOTS = (() => {
     return null;
   }
   let timer = null, thinking = false;
-  const mobile = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
-  const LEVELS = {normal: '普通', strong: '強', max: '最強'};
-  const levelOf = s => { const lv = s && s.settings && s.settings.botLevel; return LEVELS[lv] ? lv : 'max'; };
-  /* 三種強度：普通＝經驗法則版、強＝獲勝輪數規劃版、最強＝規劃版＋隨機模擬深思 */
-  function stepperFor(s) {
-    const lv = levelOf(s);
-    if (lv === 'normal') return AI_V1.step;
-    AI.params.mcRollouts = lv === 'max' ? 12 : 0;
-    AI.params.mcBudgetMs = mobile ? 450 : 650;
-    return AI.step;
-  }
+  const LEVELS = {normal: '普通', strong: '強'};
+  const levelOf = s => { const lv = s && s.settings && s.settings.botLevel; return LEVELS[lv] ? lv : 'strong'; };
+  /* 兩種強度：普通＝經驗法則版、強＝獲勝輪數規劃版 */
+  const stepperFor = s => (levelOf(s) === 'normal' ? AI_V1.step : AI.step);
   /* getS(): 目前狀態；run(fn): 把 fn 套用在狀態上並同步出去；onThink(flag): 顯示「思考中」 */
   function schedule(getS, run, onThink) {
     clearTimeout(timer); timer = null;
     const S = getS(); if (!S || S.status !== 'playing' || !S.turn) return;
     if (!isBot(S.players[S.turn.pi])) return;
     const seq = S.seq, extra = S.turn.step === 'rolled' ? 300 : 0;
-    const heavy = S.turn.step === 'build' && !S.turn.built && levelOf(S) === 'max';
+    const heavy = false;
     timer = setTimeout(() => {
       timer = null;
       const S2 = getS(); if (!S2 || S2.seq !== seq) { schedule(getS, run, onThink); return; }
@@ -1598,7 +1559,7 @@ const LOCALNET = (() => {
   const runBots = () => BOTS.schedule(() => APP.S, fn => { if (fn(APP.S) !== false) bump(); runBots(); }, () => APP.render());
   function start(settings) {
     uid = APP.uid;
-    const s = E.newGame('單機', uid, {harbor: settings.harbor, mr: settings.mr, market: settings.market, botSpeed: settings.speed || 'normal', botLevel: settings.level || 'max'});
+    const s = E.newGame('單機', uid, {harbor: settings.harbor, mr: settings.mr, market: settings.market, botSpeed: settings.speed || 'normal', botLevel: settings.level || 'strong'});
     E.addPlayer(s, uid, APP.name() || '你');
     const bots = Math.max(1, Math.min(4, settings.bots | 0));
     for (let i = 0; i < bots; i++) { const b = BOTS.nextBot(s); if (b) E.addPlayer(s, b.uid, b.name); }
@@ -2017,7 +1978,7 @@ const APP = (() => {
               <label class="check" style="display:block"><span class="small muted">電腦速度</span>
                 <select class="input" id="optSpeed" style="margin-top:4px"><option value="fast">快</option><option value="normal" selected>普通</option><option value="slow">慢</option></select></label>
               <label class="check" style="display:block"><span class="small muted">電腦強度</span>
-                <select class="input" id="optLevel" style="margin-top:4px"><option value="normal">普通（經驗法則）</option><option value="strong">強（規劃獲勝輪數）</option><option value="max" selected>最強（規劃＋模擬未來）</option></select></label>
+                <select class="input" id="optLevel" style="margin-top:4px"><option value="normal">普通（經驗法則）</option><option value="strong" selected>強（規劃獲勝輪數）</option></select></label>
             </div>
             <div class="btn-row" style="margin-top:8px"><button class="btn big soft" data-act="solo">開始單機對戰</button></div>
           </div>
@@ -2096,7 +2057,7 @@ const APP = (() => {
         ${hasBots ? `<label class="check" style="display:block"><span class="small muted">電腦速度（由房主的裝置執行，房主要留在房間裡）</span>
           <select class="input" data-act="botSpeed" style="margin-top:4px;max-width:240px" ${host ? '' : 'disabled'}><option value="fast" ${bs === 'fast' ? 'selected' : ''}>快</option><option value="normal" ${bs === 'normal' ? 'selected' : ''}>普通</option><option value="slow" ${bs === 'slow' ? 'selected' : ''}>慢</option></select></label>
         <label class="check" style="display:block"><span class="small muted">電腦強度</span>
-          <select class="input" data-act="botLevel" style="margin-top:4px;max-width:240px" ${host ? '' : 'disabled'}>${['normal', 'strong', 'max'].map(lv => `<option value="${lv}" ${BOTS.levelOf(S) === lv ? 'selected' : ''}>${BOTS.LEVELS[lv]}${lv === 'normal' ? '（經驗法則）' : lv === 'strong' ? '（規劃獲勝輪數）' : '（規劃＋模擬未來）'}</option>`).join('')}</select></label>` : ''}
+          <select class="input" data-act="botLevel" style="margin-top:4px;max-width:240px" ${host ? '' : 'disabled'}>${['normal', 'strong'].map(lv => `<option value="${lv}" ${BOTS.levelOf(S) === lv ? 'selected' : ''}>${BOTS.LEVELS[lv]}${lv === 'normal' ? '（經驗法則）' : '（規劃獲勝輪數）'}</option>`).join('')}</select></label>` : ''}
         <div class="btn-row" style="margin-top:12px">
           ${host ? `<button class="btn big" data-act="start" ${S.players.length < 2 ? 'disabled' : ''}>開始遊戲${S.players.length < 2 ? '（至少 2 人）' : ''}</button>` : `<div class="hint">等待房主 ${esc(S.players.find(p => p.uid === S.hostUid)?.name || '')} 開始遊戲…</div>`}
           ${!me() && S.players.length < 5 ? `<button class="btn soft" data-act="joinHere">加入這個房間</button>` : ''}
